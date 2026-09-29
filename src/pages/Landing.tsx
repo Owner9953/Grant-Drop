@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/convex/_generated/api";
 import {
   GIVEAWAY_SORTS,
-  PLATFORM_FILTERS,
+  PLATFORM_GROUPS,
   type Giveaway,
 } from "@/lib/giveaways";
 import { cn } from "@/lib/utils";
@@ -49,12 +49,12 @@ const FEATURES = [
   {
     icon: Gift,
     title: "Every claim, one feed",
-    body: "Steam, Epic, GOG, itch.io and mobile giveaways pulled into a single board. No tab-hopping between storefronts.",
+    body: "Steam, Epic, GOG, itch.io, Xbox, PlayStation, Nintendo, Android, iOS and DRM-free drops all pulled into a single board.",
   },
   {
     icon: Compass,
     title: "Filters that actually filter",
-    body: "Narrow by store, by offer type, or sort by raw dollar value. Search by name and the whole catalogue re-ranks instantly.",
+    body: "Narrow by any of the eleven platforms, by offer type, or sort by raw dollar value. Search by name and the whole board re-ranks instantly.",
   },
   {
     icon: BookmarkCheck,
@@ -86,7 +86,7 @@ const STEPS = [
   },
 ];
 
-const TICKER = PLATFORM_FILTERS.filter((item) => item.value !== "all").map(
+const TICKER = PLATFORM_GROUPS.filter((item) => item.value !== "all").map(
   (item) => item.label,
 );
 
@@ -343,7 +343,7 @@ export default function Landing() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {PLATFORM_FILTERS.map((filter) => (
+              {PLATFORM_GROUPS.map((filter) => (
                 <SelectItem key={filter.value} value={filter.value}>
                   {filter.label}
                 </SelectItem>

@@ -13,7 +13,9 @@ export interface GiveawayFilters {
 
 export const DEFAULT_FILTERS: GiveawayFilters = {
   platform: "all",
-  type: "game",
+  // Empty means "all types". Defaulting to `game` hid the console and mobile
+  // giveaways, which are mostly DLC/cosmetics rather than full games.
+  type: "",
   sortBy: "newest",
   search: "",
 };

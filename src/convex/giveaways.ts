@@ -9,8 +9,10 @@
 import { v } from "convex/values";
 import {
   type Giveaway,
+  UPSTREAM_PLATFORM_SLUGS,
   cleanTitle,
   extractStore,
+  matchesPlatform,
   parseWorth,
 } from "../lib/giveaways";
 import { action } from "./_generated/server";
@@ -18,15 +20,6 @@ import { action } from "./_generated/server";
 const API_ENDPOINT = "https://www.gamerpower.com/api/giveaways";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_PAGE_SIZE = 50;
-
-const PLATFORM_VALUES = v.union(
-  v.literal("all"),
-  v.literal("steam"),
-  v.literal("epic-games-store"),
-  v.literal("gog"),
-  v.literal("itchio"),
-  v.literal("android"),
-);
 
 const SORT_VALUES = v.union(
   v.literal("value"),
@@ -155,7 +148,7 @@ async function loadThroughCache(
 
 export const listGiveaways = action({
   args: {
-    platform: v.optional(PLATFORM_VALUES),
+    platform: v.optional(v.string()),
     type: v.optional(v.string()),
     sortBy: v.optional(SORT_VALUES),
     page: v.optional(v.number()),
@@ -168,11 +161,14 @@ export const listGiveaways = action({
       MAX_PAGE_SIZE,
       Math.max(1, Math.floor(args.pageSize ?? 12)),
     );
+    const platform = args.platform ?? "all";
 
     const params = new URLSearchParams();
-    if (args.platform && args.platform !== "all") {
-      params.set("platform", args.platform);
-    }
+    // Only forward a platform upstream when the endpoint actually accepts the
+    // slug; the rest (Xbox, PlayStation, Nintendo, iOS, DRM-Free, PC) are
+    // matched against the `platforms` field on the data below.
+    const slug = UPSTREAM_PLATFORM_SLUGS[platform];
+    if (slug) params.set("platform", slug);
     if (args.type) params.set("type", args.type.toLowerCase());
     if (args.sortBy) params.set("sort-by", args.sortBy);
     params.set("status", "active");
@@ -184,14 +180,15 @@ export const listGiveaways = action({
     const { data, stale } = await loadThroughCache(params.toString(), params);
 
     const search = args.search?.trim().toLowerCase();
-    const all = search
-      ? data.filter(
-          (item) =>
-            item.name.toLowerCase().includes(search) ||
-            item.description.toLowerCase().includes(search) ||
-            item.store.toLowerCase().includes(search),
-        )
-      : data;
+    const all = data.filter((item) => {
+      if (!matchesPlatform(item.platforms, platform)) return false;
+      if (!search) return true;
+      return (
+        item.name.toLowerCase().includes(search) ||
+        item.description.toLowerCase().includes(search) ||
+        item.store.toLowerCase().includes(search)
+      );
+    });
 
     const start = (page - 1) * pageSize;
     return {

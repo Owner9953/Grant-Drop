@@ -18,7 +18,7 @@ import { api } from "@/convex/_generated/api";
 import {
   GIVEAWAY_SORTS,
   GIVEAWAY_TYPES,
-  PLATFORM_FILTERS,
+  PLATFORM_GROUPS,
   type Giveaway,
 } from "@/lib/giveaways";
 import { useMutation, useQuery } from "convex/react";
@@ -232,22 +232,22 @@ export default function Dashboard() {
 
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
               <div className="flex flex-wrap items-center gap-1.5">
-                {GIVEAWAY_TYPES.map((item) => (
+                {[{ label: "All", value: "" }, ...GIVEAWAY_TYPES.map((item) => ({ label: item, value: item.toLowerCase() }))].map((item) => (
                   <button
-                    key={item}
+                    key={item.value || "all"}
                     type="button"
                     onClick={() => {
-                      setType(type === item.toLowerCase() ? "" : item.toLowerCase());
+                      setType(item.value);
                       setPage(1);
                     }}
-                    aria-pressed={type === item.toLowerCase()}
+                    aria-pressed={type === item.value}
                     className={`h-8 rounded-full border px-3.5 text-[13px] font-medium transition-colors ${
-                      type === item.toLowerCase()
+                      type === item.value
                         ? "border-transparent bg-foreground text-background"
                         : "border-border/80 bg-card text-muted-foreground hover:border-border hover:text-foreground"
                     }`}
                   >
-                    {item}
+                    {item.label}
                   </button>
                 ))}
               </div>
@@ -268,7 +268,7 @@ export default function Dashboard() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {PLATFORM_FILTERS.map((filter) => (
+                    {PLATFORM_GROUPS.map((filter) => (
                       <SelectItem key={filter.value} value={filter.value}>
                         {filter.label}
                       </SelectItem>

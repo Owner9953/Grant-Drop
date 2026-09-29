@@ -38,24 +38,56 @@ export const GIVEAWAY_SORTS = [
   { value: "random", label: "Surprise me" },
 ] as const;
 
-export interface PlatformFilter {
+export interface PlatformGroup {
   value: string;
   label: string;
+  /**
+   * Tokens matched (case-insensitively) against each entry of a giveaway's
+   * `platforms` array, e.g. "Xbox" covers Xbox 360 / One / Series X|S.
+   */
+  match: string[];
 }
 
 /**
- * Only slugs the GamerPower endpoint actually accepts. Its docs list more
- * (ubisoft-connect, nintendo, itunes, ...) but those return HTTP 404
- * "No category found", so offering them would only produce empty results.
+ * The platform taxonomy used by the feed itself. GamerPower's `platform=` query
+ * param only accepts five slugs and 404s on the rest, so the browser-facing
+ * filters are matched against the `platforms` field on the data instead.
  */
-export const PLATFORM_FILTERS: PlatformFilter[] = [
-  { value: "all", label: "All stores" },
-  { value: "steam", label: "Steam" },
-  { value: "epic-games-store", label: "Epic Games" },
-  { value: "gog", label: "GOG" },
-  { value: "itchio", label: "itch.io" },
-  { value: "android", label: "Mobile" },
+export const PLATFORM_GROUPS: PlatformGroup[] = [
+  { value: "all", label: "All platforms", match: [] },
+  { value: "pc", label: "PC", match: ["pc"] },
+  { value: "steam", label: "Steam", match: ["steam"] },
+  { value: "epic", label: "Epic Games Store", match: ["epic"] },
+  { value: "gog", label: "GOG", match: ["gog"] },
+  { value: "itchio", label: "itch.io", match: ["itch.io"] },
+  { value: "xbox", label: "Xbox", match: ["xbox"] },
+  { value: "playstation", label: "PlayStation", match: ["playstation"] },
+  { value: "nintendo", label: "Nintendo", match: ["nintendo"] },
+  { value: "android", label: "Android", match: ["android"] },
+  { value: "ios", label: "iOS", match: ["ios"] },
+  { value: "drm-free", label: "DRM-Free", match: ["drm-free"] },
 ];
+
+/** Group -> the subset the upstream `platform=` param actually accepts. */
+export const UPSTREAM_PLATFORM_SLUGS: Record<string, string> = {
+  steam: "steam",
+  epic: "epic-games-store",
+  gog: "gog",
+  itchio: "itchio",
+  android: "android",
+};
+
+export function matchesPlatform(
+  platforms: string[],
+  groupValue: string,
+): boolean {
+  if (!groupValue || groupValue === "all") return true;
+  const group = PLATFORM_GROUPS.find((item) => item.value === groupValue);
+  if (!group) return true;
+  return platforms.some((entry) =>
+    group.match.some((token) => entry.toLowerCase().includes(token)),
+  );
+}
 
 /** Matches the trailing store suffix: "Title (itch.io) Giveaway", "Title (Steam) Key Giveaway". */
 const STORE_SUFFIX = /\s*\(([^)]+)\)[^()]*\s*Giveaway\s*$/i;
