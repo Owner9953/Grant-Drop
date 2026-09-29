@@ -152,12 +152,12 @@ export default function Landing() {
             <h1 className="text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-6xl">
               Every free PC game,
               <br />
-              <span className="text-primary">ranked by what it's worth.</span>
+              <span className="text-primary">on one clean board.</span>
             </h1>
             <p className="text-balance mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground">
-              Grantdrop pulls active giveaways from every major storefront into
-              one clean board. Filter by store, sort by dollar value, and save the
-              ones you want before the timer runs out.
+              Grantdrop pulls active giveaways from every major storefront into a
+              single feed. New drops land first, or sort by dollar value — then
+              save the ones you want before the timer runs out.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button asChild size="lg" className="h-11 w-full px-6 sm:w-auto">
@@ -222,7 +222,8 @@ export default function Landing() {
             </h2>
             <p className="mt-3 text-[15px] leading-7 text-muted-foreground">
               Pulled live from the GamerPower giveaway feed and sorted by retail
-              price. Sign in to filter, search and keep your own list.
+              price. Inside the hub you can switch to newest-first, filter by
+              store, search, and keep your own list.
             </p>
           </div>
           <Button asChild variant="outline" className="shrink-0 gap-1.5 self-start sm:self-auto">

@@ -32,9 +32,9 @@ export const GIVEAWAY_TYPES = ["Game", "DLC", "Loot", "Soundtrack"] as const;
 export type GiveawayType = (typeof GIVEAWAY_TYPES)[number];
 
 export const GIVEAWAY_SORTS = [
+  { value: "newest", label: "Newest first" },
   { value: "value", label: "Most valuable" },
   { value: "popularity", label: "Most popular" },
-  { value: "newest", label: "Newest" },
   { value: "random", label: "Surprise me" },
 ] as const;
 
@@ -86,6 +86,16 @@ export function parseWorth(worth: string): number {
 export function formatWorth(worth: string, amount: number): string {
   if (amount > 0) return worth || `$${amount.toFixed(2)}`;
   return "Valued deal";
+}
+
+/** True while an offer is newly published — drives the "Just in" badge. */
+export function isFreshGiveaway(
+  publishedAt: number | null,
+  now = Date.now(),
+): boolean {
+  if (publishedAt === null) return false;
+  const age = now - publishedAt;
+  return age >= 0 && age < 48 * 3_600_000;
 }
 
 export function msRemaining(endsAt: number | null, now = Date.now()): number | null {

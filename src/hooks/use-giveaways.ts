@@ -14,7 +14,7 @@ export interface GiveawayFilters {
 export const DEFAULT_FILTERS: GiveawayFilters = {
   platform: "all",
   type: "game",
-  sortBy: "value",
+  sortBy: "newest",
   search: "",
 };
 
@@ -29,6 +29,7 @@ export function useGiveaways(
 ) {
   const listGiveaways = useAction(api.giveaways.listGiveaways);
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
+  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const requestRef = useRef(0);
@@ -51,9 +52,10 @@ export function useGiveaways(
         pageSize,
         search: search || undefined,
       })
-        .then((data) => {
+        .then((result) => {
           if (requestRef.current !== requestId) return;
-          setGiveaways(data);
+          setGiveaways(result.items);
+          setTotal(result.total);
         })
         .catch((err: unknown) => {
           if (requestRef.current !== requestId) return;
@@ -69,7 +71,7 @@ export function useGiveaways(
     return () => clearTimeout(timer);
   }, [key, listGiveaways, filters.platform, filters.type, filters.sortBy, page, pageSize, search]);
 
-  return { giveaways, isLoading, error };
+  return { giveaways, total, isLoading, error };
 }
 
 export function useFeaturedGiveaways(count = 8) {

@@ -25,6 +25,8 @@ import { useMutation, useQuery } from "convex/react";
 import {
   Bookmark,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Inbox,
   LogOut,
   Search,
@@ -56,7 +58,7 @@ export default function Dashboard() {
     () => ({ platform, type, sortBy, search }),
     [platform, type, sortBy, search],
   );
-  const { giveaways, isLoading, error } = useGiveaways(
+  const { giveaways, total, isLoading, error } = useGiveaways(
     filters,
     page,
     PAGE_SIZE,
@@ -106,6 +108,9 @@ export default function Dashboard() {
   };
 
   const showLibrary = tab === "library";
+  const sortLabel =
+    GIVEAWAY_SORTS.find((option) => option.value === sortBy)?.label ??
+    "Newest first";
   const hasActiveFilters =
     platform !== DEFAULT_FILTERS.platform ||
     type !== DEFAULT_FILTERS.type ||
@@ -180,7 +185,7 @@ export default function Dashboard() {
             <p className="mt-3 max-w-lg text-[15px] leading-7 text-muted-foreground">
               {showLibrary
                 ? "Everything you've saved, newest first. Remove anything you've already claimed."
-                : "Active free-to-keep offers across every major storefront, ranked by retail value."}
+                : `Active free-to-keep offers across every major storefront, ${sortLabel.toLowerCase()}.`}
             </p>
           </div>
 
@@ -360,29 +365,34 @@ export default function Dashboard() {
                 />
               )}
 
-              {giveaways.length >= PAGE_SIZE && (
-                <div className="mt-10 flex items-center justify-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 1 || isLoading}
-                    onClick={() => setPage((current) => Math.max(1, current - 1))}
-                  >
-                    Previous
-                  </Button>
+              {giveaways.length > 0 && (
+                <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                   <span className="text-sm tabular-nums text-muted-foreground">
-                    Page {page}
+                    Showing {(page - 1) * PAGE_SIZE + 1}–
+                    {Math.min(page * PAGE_SIZE, total)} of {total}
                   </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoading}
-                    onClick={() => setPage((current) => current + 1)}
-                  >
-                    Next
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={page === 1 || isLoading}
+                      onClick={() => setPage((current) => Math.max(1, current - 1))}
+                    >
+                      <ChevronLeft className="size-3.5" />
+                      Previous
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isLoading || page * PAGE_SIZE >= total}
+                      onClick={() => setPage((current) => current + 1)}
+                    >
+                      Next
+                      <ChevronRight className="size-3.5" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </>

@@ -5,6 +5,7 @@ import {
   compactNumber,
   formatCountdown,
   formatWorth,
+  isFreshGiveaway,
   type Giveaway,
   urgencyLevel,
 } from "@/lib/giveaways";
@@ -29,6 +30,7 @@ export function GiveawayCard({
   className?: string;
 }) {
   const urgency = urgencyLevel(giveaway.endsAt);
+  const isFresh = isFreshGiveaway(giveaway.publishedAt);
 
   return (
     <article
@@ -46,9 +48,16 @@ export function GiveawayCard({
           className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
         />
         <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
-          <Badge className="border-0 bg-background/85 text-[11px] font-medium tracking-tight text-foreground backdrop-blur-sm">
-            {giveaway.store}
-          </Badge>
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <Badge className="border-0 bg-background/85 text-[11px] font-medium tracking-tight text-foreground backdrop-blur-sm">
+              {giveaway.store}
+            </Badge>
+            {isFresh && (
+              <Badge className="border-0 bg-primary text-[11px] font-semibold text-primary-foreground">
+                Just in
+              </Badge>
+            )}
+          </div>
           <Badge
             className={cn(
               "border-0 text-[11px] font-semibold tabular-nums backdrop-blur-sm",

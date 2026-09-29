@@ -138,25 +138,28 @@ export const listGiveaways = action({
       params.set("search", search);
       params.set("search-by", "name");
     }
-    params.set("page", String(page));
-    params.set("page-size", String(pageSize));
     params.set("status", "active");
 
+    // NOTE: the upstream API ignores `page` and `page-size` and always returns
+    // the same capped result set, so paging happens here instead. That also
+    // means one cached fetch per filter combination serves every page.
     const key = params.toString();
     const hit = cache.get(key);
-    if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
-      return hit.data;
-    }
+    const all =
+      hit && Date.now() - hit.at < CACHE_TTL_MS
+        ? hit.data
+        : await fetchFromApi(params).then((data) => {
+            cache.set(key, { at: Date.now(), data });
+            // Keep the cache from growing without bound across filter combos.
+            if (cache.size > 60) {
+              const oldest = [...cache.entries()].sort((a, b) => a[1].at - b[1].at);
+              for (const [staleKey] of oldest.slice(0, 20)) cache.delete(staleKey);
+            }
+            return data;
+          });
 
-    const data = await fetchFromApi(params);
-    cache.set(key, { at: Date.now(), data });
-
-    // Keep the cache from growing without bound across filter combinations.
-    if (cache.size > 60) {
-      const oldest = [...cache.entries()].sort((a, b) => a[1].at - b[1].at);
-      for (const [staleKey] of oldest.slice(0, 20)) cache.delete(staleKey);
-    }
-    return data;
+    const start = (page - 1) * pageSize;
+    return { items: all.slice(start, start + pageSize), total: all.length };
   },
 });
 
@@ -171,13 +174,11 @@ export const featuredGiveaways = action({
     const params = new URLSearchParams({
       "sort-by": "value",
       "type": "game",
-      "page": "1",
-      "page-size": "8",
       status: "active",
     });
     const data = await fetchFromApi(params);
     cache.set(key, { at: Date.now(), data });
-    return data;
+    return data.slice(0, 8);
   },
 });
 
