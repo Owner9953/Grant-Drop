@@ -43,19 +43,18 @@ export interface PlatformFilter {
   label: string;
 }
 
+/**
+ * Only slugs the GamerPower endpoint actually accepts. Its docs list more
+ * (ubisoft-connect, nintendo, itunes, ...) but those return HTTP 404
+ * "No category found", so offering them would only produce empty results.
+ */
 export const PLATFORM_FILTERS: PlatformFilter[] = [
   { value: "all", label: "All stores" },
   { value: "steam", label: "Steam" },
   { value: "epic-games-store", label: "Epic Games" },
   { value: "gog", label: "GOG" },
   { value: "itchio", label: "itch.io" },
-  { value: "ubisoft-connect", label: "Ubisoft" },
-  { value: "ea-app", label: "EA App" },
-  { value: "xbox-game-pass", label: "Game Pass" },
-  { value: "playstation", label: "PlayStation" },
-  { value: "nintendo", label: "Nintendo" },
-  { value: "itunes", label: "iTunes" },
-  { value: "android", label: "Android" },
+  { value: "android", label: "Mobile" },
 ];
 
 /** Matches the trailing store suffix: "Title (itch.io) Giveaway", "Title (Steam) Key Giveaway". */

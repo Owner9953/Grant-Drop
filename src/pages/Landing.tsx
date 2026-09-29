@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFeaturedGiveaways } from "@/hooks/use-giveaways";
 import { useAuth } from "@/hooks/use-auth";
+import { PLATFORM_FILTERS } from "@/lib/giveaways";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
@@ -61,18 +62,9 @@ const STEPS = [
   },
 ];
 
-const TICKER = [
-  "Steam",
-  "Epic Games",
-  "GOG",
-  "itch.io",
-  "Ubisoft Connect",
-  "EA App",
-  "Game Pass",
-  "PlayStation",
-  "Nintendo",
-  "iTunes",
-];
+const TICKER = PLATFORM_FILTERS.filter((item) => item.value !== "all").map(
+  (item) => item.label,
+);
 
 export default function Landing() {
   const { giveaways, isLoading } = useFeaturedGiveaways(8);

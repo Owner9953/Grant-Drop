@@ -58,7 +58,7 @@ export default function Dashboard() {
     () => ({ platform, type, sortBy, search }),
     [platform, type, sortBy, search],
   );
-  const { giveaways, total, isLoading, error } = useGiveaways(
+  const { giveaways, total, stale, isLoading, error } = useGiveaways(
     filters,
     page,
     PAGE_SIZE,
@@ -312,10 +312,13 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        )}
-
-        {/* ------------------------------------------------------------- Grid */}
+        )}          {/* ------------------------------------------------------------- Grid */}
         <div className="mt-8">
+          {!showLibrary && stale && giveaways.length > 0 && (
+            <p className="mb-5 rounded-lg border border-border/70 bg-secondary/50 px-4 py-2.5 text-xs text-muted-foreground">
+              Showing the last known list while the feed reconnects.
+            </p>
+          )}
           {showLibrary ? (
             <LibraryGrid
               onSelect={setSelected}
@@ -324,7 +327,7 @@ export default function Dashboard() {
           ) : error ? (
             <EmptyState
               title="Couldn't reach the giveaway feed"
-              body={error}
+              body="The upstream service isn't responding right now. Give it a moment and try again."
               action={
                 <Button
                   type="button"

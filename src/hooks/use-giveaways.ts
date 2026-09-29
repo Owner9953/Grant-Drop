@@ -30,6 +30,7 @@ export function useGiveaways(
   const listGiveaways = useAction(api.giveaways.listGiveaways);
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
   const [total, setTotal] = useState(0);
+  const [stale, setStale] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const requestRef = useRef(0);
@@ -56,6 +57,7 @@ export function useGiveaways(
           if (requestRef.current !== requestId) return;
           setGiveaways(result.items);
           setTotal(result.total);
+          setStale(result.stale);
         })
         .catch((err: unknown) => {
           if (requestRef.current !== requestId) return;
@@ -71,7 +73,7 @@ export function useGiveaways(
     return () => clearTimeout(timer);
   }, [key, listGiveaways, filters.platform, filters.type, filters.sortBy, page, pageSize, search]);
 
-  return { giveaways, total, isLoading, error };
+  return { giveaways, total, stale, isLoading, error };
 }
 
 export function useFeaturedGiveaways(count = 8) {

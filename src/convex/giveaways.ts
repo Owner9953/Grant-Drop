@@ -25,12 +25,6 @@ const PLATFORM_VALUES = v.union(
   v.literal("epic-games-store"),
   v.literal("gog"),
   v.literal("itchio"),
-  v.literal("ubisoft-connect"),
-  v.literal("ea-app"),
-  v.literal("xbox-game-pass"),
-  v.literal("playstation"),
-  v.literal("nintendo"),
-  v.literal("itunes"),
   v.literal("android"),
 );
 
@@ -97,18 +91,66 @@ function normalise(raw: RawGiveaway): Giveaway {
   };
 }
 
+/**
+ * The upstream API is loose about its contract: an empty category comes back as
+ * HTTP 201 with a `{"status":0,...}` object, and an unknown category as HTTP 404
+ * with the same shape. Neither is a real failure, so both mean "no results".
+ * Only 5xx / network trouble is treated as transient.
+ */
 async function fetchFromApi(params: URLSearchParams): Promise<Giveaway[]> {
   const response = await fetch(`${API_ENDPOINT}?${params.toString()}`, {
     headers: { Accept: "application/json" },
   });
-  if (!response.ok) {
+  if (response.status >= 500) {
     throw new Error(`GamerPower API responded ${response.status}`);
   }
-  const payload = await response.json();
-  if (!Array.isArray(payload)) {
-    throw new Error("GamerPower API returned an unexpected payload");
+  if (!response.ok) return [];
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    return [];
   }
-  return payload.map((item: RawGiveaway) => normalise(item));
+  if (!Array.isArray(payload)) return [];
+
+  return (payload as RawGiveaway[])
+    .filter((item) => item && typeof item.id === "number" && item.title)
+    .map((item) => normalise(item));
+}
+
+/**
+ * Reads through the cache, and on a transient upstream failure falls back to the
+ * last good result rather than surfacing an error on the page. `stale` tells the
+ * UI when the data it is showing may be behind.
+ */
+async function loadThroughCache(
+  key: string,
+  params: URLSearchParams,
+): Promise<{ data: Giveaway[]; stale: boolean }> {
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
+    return { data: hit.data, stale: false };
+  }
+
+  try {
+    const data = await fetchFromApi(params);
+    cache.set(key, { at: Date.now(), data });
+
+    // Keep the cache from growing without bound across filter combinations.
+    if (cache.size > 60) {
+      const oldest = [...cache.entries()].sort((a, b) => a[1].at - b[1].at);
+      for (const [staleKey] of oldest.slice(0, 20)) cache.delete(staleKey);
+    }
+    return { data, stale: false };
+  } catch (err) {
+    if (hit) {
+      // Keep serving the last good list, and retry the upstream fetch on the
+      // next request rather than hammering it every page view.
+      return { data: hit.data, stale: true };
+    }
+    throw err;
+  }
 }
 
 export const listGiveaways = action({
@@ -133,33 +175,30 @@ export const listGiveaways = action({
     }
     if (args.type) params.set("type", args.type.toLowerCase());
     if (args.sortBy) params.set("sort-by", args.sortBy);
-    const search = args.search?.trim();
-    if (search) {
-      params.set("search", search);
-      params.set("search-by", "name");
-    }
     params.set("status", "active");
 
-    // NOTE: the upstream API ignores `page` and `page-size` and always returns
-    // the same capped result set, so paging happens here instead. That also
-    // means one cached fetch per filter combination serves every page.
-    const key = params.toString();
-    const hit = cache.get(key);
-    const all =
-      hit && Date.now() - hit.at < CACHE_TTL_MS
-        ? hit.data
-        : await fetchFromApi(params).then((data) => {
-            cache.set(key, { at: Date.now(), data });
-            // Keep the cache from growing without bound across filter combos.
-            if (cache.size > 60) {
-              const oldest = [...cache.entries()].sort((a, b) => a[1].at - b[1].at);
-              for (const [staleKey] of oldest.slice(0, 20)) cache.delete(staleKey);
-            }
-            return data;
-          });
+    // NOTE: the upstream API ignores `page`, `page-size` and `search` and always
+    // returns the same capped result set. Paging and search therefore happen
+    // here, which also means one cached fetch per filter combination serves
+    // every page and every keystroke.
+    const { data, stale } = await loadThroughCache(params.toString(), params);
+
+    const search = args.search?.trim().toLowerCase();
+    const all = search
+      ? data.filter(
+          (item) =>
+            item.name.toLowerCase().includes(search) ||
+            item.description.toLowerCase().includes(search) ||
+            item.store.toLowerCase().includes(search),
+        )
+      : data;
 
     const start = (page - 1) * pageSize;
-    return { items: all.slice(start, start + pageSize), total: all.length };
+    return {
+      items: all.slice(start, start + pageSize),
+      total: all.length,
+      stale,
+    };
   },
 });
 
@@ -167,17 +206,12 @@ export const listGiveaways = action({
 export const featuredGiveaways = action({
   args: {},
   handler: async () => {
-    const key = "featured";
-    const hit = cache.get(key);
-    if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.data;
-
     const params = new URLSearchParams({
       "sort-by": "value",
       "type": "game",
       status: "active",
     });
-    const data = await fetchFromApi(params);
-    cache.set(key, { at: Date.now(), data });
+    const { data } = await loadThroughCache("featured", params);
     return data.slice(0, 8);
   },
 });
