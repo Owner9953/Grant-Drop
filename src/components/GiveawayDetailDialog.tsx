@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExternalLinkButton } from "@/components/ExternalLinkButton";
 import {
   Dialog,
   DialogContent,
@@ -146,12 +147,14 @@ export function GiveawayDetailDialog({
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Button asChild className="h-10 flex-1 gap-1.5">
-              <a href={giveaway.url} target="_blank" rel="noopener noreferrer">
-                Claim on {giveaway.store}
-                <ExternalLink className="size-3.5" />
-              </a>
-            </Button>
+            <ExternalLinkButton
+              href={giveaway.url}
+              className="h-10 flex-1 gap-1.5"
+              aria-label={`Claim ${giveaway.name} on ${giveaway.store}`}
+            >
+              Claim on {giveaway.store}
+              <ExternalLink className="size-3.5" />
+            </ExternalLinkButton>
             <Button
               type="button"
               variant="outline"

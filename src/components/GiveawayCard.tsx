@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExternalLinkButton } from "@/components/ExternalLinkButton";
 import { cn } from "@/lib/utils";
 import {
   compactNumber,
@@ -129,17 +130,15 @@ export function GiveawayCard({
                 Details
               </Button>
             )}
-            <Button asChild size="sm" className="h-8 gap-1.5 px-3 text-xs">
-              <a
-                href={giveaway.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Claim ${giveaway.name} on ${giveaway.store}`}
-              >
-                {onSelect ? "Claim" : "Get it"}
-                <ExternalLink className="size-3" />
-              </a>
-            </Button>
+            <ExternalLinkButton
+              href={giveaway.url}
+              size="sm"
+              className="h-8 gap-1.5 px-3 text-xs"
+              aria-label={`Claim ${giveaway.name} on ${giveaway.store}`}
+            >
+              {onSelect ? "Claim" : "Get it"}
+              <ExternalLink className="size-3" />
+            </ExternalLinkButton>
           </div>
         </div>
       </div>
