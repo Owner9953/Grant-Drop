@@ -9,7 +9,7 @@ import {
   type Giveaway,
   urgencyLevel,
 } from "@/lib/giveaways";
-import { Bookmark, Timer, Users } from "lucide-react";
+import { Bookmark, ExternalLink, Timer, Users } from "lucide-react";
 
 /**
  * The offer tile used on both the landing page and the app grid. `onSelect`
@@ -117,23 +117,30 @@ export function GiveawayCard({
             )}
           </div>
 
-          {onSelect ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              className="h-8 shrink-0 px-3 text-xs"
-              onClick={() => onSelect(giveaway)}
-            >
-              Details
-            </Button>
-          ) : (
-            <Button asChild size="sm" className="h-8 shrink-0 px-3 text-xs">
-              <a href={giveaway.url} target="_blank" rel="noopener noreferrer">
-                Claim
+          <div className="flex shrink-0 items-center gap-1.5">
+            {onSelect && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="h-8 px-3 text-xs"
+                onClick={() => onSelect(giveaway)}
+              >
+                Details
+              </Button>
+            )}
+            <Button asChild size="sm" className="h-8 gap-1.5 px-3 text-xs">
+              <a
+                href={giveaway.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Claim ${giveaway.name} on ${giveaway.store}`}
+              >
+                {onSelect ? "Claim" : "Get it"}
+                <ExternalLink className="size-3" />
               </a>
             </Button>
-          )}
+          </div>
         </div>
       </div>
     </article>

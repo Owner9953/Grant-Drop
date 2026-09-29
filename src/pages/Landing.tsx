@@ -1,31 +1,55 @@
 import { GiveawayCard, GiveawayCardSkeleton } from "@/components/GiveawayCard";
+import { GiveawayDetailDialog } from "@/components/GiveawayDetailDialog";
 import { Wordmark } from "@/components/Wordmark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useFeaturedGiveaways } from "@/hooks/use-giveaways";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DEFAULT_FILTERS, useFeaturedGiveaways, useGiveaways } from "@/hooks/use-giveaways";
 import { useAuth } from "@/hooks/use-auth";
-import { PLATFORM_FILTERS } from "@/lib/giveaways";
+import { api } from "@/convex/_generated/api";
+import {
+  GIVEAWAY_SORTS,
+  PLATFORM_FILTERS,
+  type Giveaway,
+} from "@/lib/giveaways";
 import { cn } from "@/lib/utils";
+import { useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
   BellRing,
   BookmarkCheck,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Compass,
   Gift,
   LayoutGrid,
+  Search,
   ShieldCheck,
   Sparkles,
+  X,
   Zap,
 } from "lucide-react";
-import { Link } from "react-router";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { toast } from "sonner";
+
+const LIVE_PAGE_SIZE = 9;
+const NO_IDS: number[] = [];
 
 const FEATURES = [
   {
     icon: Gift,
     title: "Every claim, one feed",
-    body: "Steam, Epic, GOG, itch.io, Ubisoft and more pulled into a single ranked board. No tab-hopping between storefronts.",
+    body: "Steam, Epic, GOG, itch.io and mobile giveaways pulled into a single board. No tab-hopping between storefronts.",
   },
   {
     icon: Compass,
@@ -67,11 +91,61 @@ const TICKER = PLATFORM_FILTERS.filter((item) => item.value !== "all").map(
 );
 
 export default function Landing() {
-  const { giveaways, isLoading } = useFeaturedGiveaways(8);
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
-  const totalWorth = giveaways.reduce((sum, item) => sum + item.worthAmount, 0);
-  const featured = giveaways.slice(0, 6);
+  // Hero stat only: what the most valuable offers on the board are worth.
+  const { giveaways: topOffers } = useFeaturedGiveaways(8);
+  const totalWorth = topOffers.reduce((sum, item) => sum + item.worthAmount, 0);
+
+  // The live board is fully browsable signed-out.
+  const [platform, setPlatform] = useState(DEFAULT_FILTERS.platform);
+  const [sortBy, setSortBy] = useState(DEFAULT_FILTERS.sortBy);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<Giveaway | null>(null);
+
+  const { giveaways, total, isLoading, error } = useGiveaways(
+    { platform, type: DEFAULT_FILTERS.type, sortBy, search },
+    page,
+    LIVE_PAGE_SIZE,
+  );
+
+  // Returns [] for signed-out visitors, so bookmarks simply read as unsaved.
+  const savedIds = useQuery(api.library.savedIds) ?? NO_IDS;
+  const savedSet = useMemo(() => new Set(savedIds), [savedIds]);
+  const toggleSaved = useMutation(api.library.toggleSaved);
+
+  const handleToggleSave = async (giveaway: Giveaway) => {
+    if (!isAuthenticated) {
+      toast("Sign in to keep giveaways in your library", {
+        description: "Browsing stays free and unlimited.",
+        action: {
+          label: "Sign in",
+          onClick: () => navigate("/auth?returnTo=/"),
+        },
+      });
+      return;
+    }
+    try {
+      const result = await toggleSaved({
+        giveawayId: giveaway.id,
+        name: giveaway.name,
+        store: giveaway.store,
+        worth: giveaway.worth,
+        thumbnail: giveaway.thumbnail,
+        url: giveaway.url,
+        endsAt: giveaway.endsAt ?? undefined,
+      });
+      toast.success(
+        result.saved
+          ? `${giveaway.name} saved to your library`
+          : `${giveaway.name} removed from your library`,
+      );
+    } catch {
+      toast.error("Could not update your library.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -167,7 +241,7 @@ export default function Landing() {
               {[
                 { label: "Giveaways indexed", value: "1,900+" },
                 {
-                  label: "Top 6 value now",
+                  label: "Worth of top deals",
                   value: totalWorth > 0 ? `$${Math.round(totalWorth)}` : "$0",
                 },
                 { label: "Cost to join", value: "$0" },
@@ -210,12 +284,12 @@ export default function Landing() {
               Live right now
             </p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
-              The highest-value freebies on the board
+              Every active giveaway, newest first
             </h2>
             <p className="mt-3 text-[15px] leading-7 text-muted-foreground">
-              Pulled live from the GamerPower giveaway feed and sorted by retail
-              price. Inside the hub you can switch to newest-first, filter by
-              store, search, and keep your own list.
+              Pulled live from the GamerPower giveaway feed. Browse, search and
+              filter the whole board right here — no account needed. Sign in only
+              if you want to save offers to a library.
             </p>
           </div>
           <Button asChild variant="outline" className="shrink-0 gap-1.5 self-start sm:self-auto">
@@ -226,12 +300,86 @@ export default function Landing() {
           </Button>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Anonymous toolbar: search, store filter and sort all work signed-out. */}
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative sm:max-w-xs sm:flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
+              placeholder="Search games"
+              aria-label="Search games"
+              className="h-10 bg-card pl-9 pr-9"
+            />
+            {search && (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={() => {
+                  setSearch("");
+                  setPage(1);
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+
+          <Select
+            value={platform}
+            onValueChange={(value) => {
+              setPlatform(value);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger
+              aria-label="Filter by store"
+              className="h-10 w-full bg-card text-sm sm:w-[168px]"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PLATFORM_FILTERS.map((filter) => (
+                <SelectItem key={filter.value} value={filter.value}>
+                  {filter.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={sortBy}
+            onValueChange={(value) => {
+              setSortBy(value as typeof sortBy);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger
+              aria-label="Sort giveaways"
+              className="h-10 w-full bg-card text-sm sm:w-[168px]"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {GIVEAWAY_SORTS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {isLoading
-            ? Array.from({ length: 6 }).map((_, index) => (
+            ? Array.from({ length: LIVE_PAGE_SIZE }).map((_, index) => (
                 <GiveawayCardSkeleton key={index} />
               ))
-            : featured.map((giveaway, index) => (
+            : giveaways.map((giveaway, index) => (
                 <motion.div
                   key={giveaway.id}
                   initial={{ opacity: 0, y: 12 }}
@@ -239,16 +387,82 @@ export default function Landing() {
                   viewport={{ once: true, margin: "-60px" }}
                   transition={{ duration: 0.4, delay: index * 0.05 }}
                 >
-                  <GiveawayCard giveaway={giveaway} />
+                  <GiveawayCard
+                    giveaway={giveaway}
+                    isSaved={savedSet.has(giveaway.id)}
+                    onToggleSave={handleToggleSave}
+                    onSelect={setSelected}
+                  />
                 </motion.div>
               ))}
         </div>
 
-        {!isLoading && featured.length === 0 && (
-          <p className="mt-10 rounded-xl border border-border/70 bg-card px-6 py-10 text-center text-sm text-muted-foreground">
-            The feed is taking a moment to respond. Try again in a moment.
-          </p>
+        {!isLoading && giveaways.length === 0 && (
+          <div className="surface-card mt-6 px-6 py-14 text-center">
+            <h3 className="text-base font-semibold tracking-tight">
+              {error ? "The feed is taking a moment" : "Nothing matches that yet"}
+            </h3>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+              {error
+                ? "GamerPower isn't responding. Try again in a moment."
+                : "Try a different store or clear the search to see the full board."}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-5"
+              onClick={() => {
+                setSearch("");
+                setPlatform(DEFAULT_FILTERS.platform);
+                setSortBy(DEFAULT_FILTERS.sortBy);
+                setPage(1);
+              }}
+            >
+              Reset
+            </Button>
+          </div>
         )}
+
+        {giveaways.length > 0 && (
+          <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <span className="text-sm tabular-nums text-muted-foreground">
+              Showing {(page - 1) * LIVE_PAGE_SIZE + 1}–
+              {Math.min(page * LIVE_PAGE_SIZE, total)} of {total}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={page === 1 || isLoading}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+              >
+                <ChevronLeft className="size-3.5" />
+                Previous
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isLoading || page * LIVE_PAGE_SIZE >= total}
+                onClick={() => setPage((current) => current + 1)}
+              >
+                Next
+                <ChevronRight className="size-3.5" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <p className="mt-8 text-center text-xs text-muted-foreground">
+          Browsing works without an account.{" "}
+          <Link
+            to={isAuthenticated ? "/dashboard" : "/auth?returnTo=/dashboard"}
+            className="font-medium text-foreground underline underline-offset-4 transition-colors hover:text-primary"
+          >
+            {isAuthenticated ? "Open your saved library" : "Sign in to save offers"}
+          </Link>
+        </p>
       </section>
 
       {/* ------------------------------------------------------------ Features */}
@@ -379,6 +593,16 @@ export default function Landing() {
           </p>
         </div>
       </footer>
+
+      <GiveawayDetailDialog
+        giveaway={selected}
+        open={selected !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelected(null);
+        }}
+        isSaved={selected ? savedSet.has(selected.id) : false}
+        onToggleSave={handleToggleSave}
+      />
     </div>
   );
 }
