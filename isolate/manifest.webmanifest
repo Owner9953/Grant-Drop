@@ -1,0 +1,24 @@
+{
+  "name": "Grantdrop — Free Game Giveaways",
+  "short_name": "Grantdrop",
+  "description": "Every free game giveaway on one board, across PC, console and mobile. Filter by platform, save offers to your library, and claim before the timer runs out.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#080B10",
+  "theme_color": "#080B10",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

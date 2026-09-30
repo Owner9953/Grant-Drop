@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Grantdrop">
+  <defs>
+    <linearGradient id="gd-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1A212B" />
+      <stop offset="1" stop-color="#080B10" />
+    </linearGradient>
+    <linearGradient id="gd-mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4AE3A0" />
+      <stop offset="0.55" stop-color="#2DD4BF" />
+      <stop offset="1" stop-color="#22D3EE" />
+    </linearGradient>
+  </defs>
+
+  <!-- Graphite tile -->
+  <rect width="64" height="64" rx="15" fill="url(#gd-bg)" />
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="14.25" fill="none" stroke="#ffffff" stroke-opacity="0.1" stroke-width="1.5" />
+
+  <!-- G: a broken ring with a crossbar, open on the right -->
+  <path
+    d="M44.6 32 A12.6 12.6 0 1 0 38.3 20.6"
+    fill="none"
+    stroke="url(#gd-mark)"
+    stroke-width="6.4"
+    stroke-linecap="round"
+  />
+  <path d="M44.6 32 H34.2" fill="none" stroke="url(#gd-mark)" stroke-width="6.4" stroke-linecap="round" />
+
+  <!-- Pixel accent: the "drop" landing in the gap of the G -->
+  <rect x="41.4" y="13.2" width="6.2" height="6.2" rx="1.6" fill="#4AE3A0" />
+</svg>
