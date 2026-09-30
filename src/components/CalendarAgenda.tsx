@@ -28,8 +28,8 @@ export function CalendarAgenda({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, index) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, index) => (
           <GiveawayCardSkeleton key={index} />
         ))}
       </div>
@@ -43,51 +43,60 @@ export function CalendarAgenda({
     <div className="space-y-4">
       {days.map((day) => (
         <section key={day.key} className="surface-card overflow-hidden">
-          <header className="flex items-center gap-2.5 border-b border-border/60 bg-secondary/40 px-4 py-3">
-            <h3 className="text-sm font-semibold tracking-tight">{day.label}</h3>
+          <header className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 border-b border-border/60 bg-secondary/40 px-4 py-3">
+            <h3 className="min-w-0 truncate text-sm font-semibold tracking-tight">
+              {day.label}
+            </h3>
             {day.isToday && (
-              <Badge className="border-0 bg-primary text-[11px] font-semibold text-primary-foreground">
+              <Badge className="shrink-0 border-0 bg-primary text-[11px] font-semibold text-primary-foreground">
                 Today
               </Badge>
             )}
-            <span className="ml-auto text-xs tabular-nums text-muted-foreground">
+            <span className="ml-auto shrink-0 text-xs tabular-nums text-muted-foreground">
               {day.entries.length} {day.entries.length === 1 ? "offer" : "offers"}
             </span>
           </header>
 
           <ul className="divide-y divide-border/60">
             {day.entries.map((entry) => (
+              // Mobile puts the title on its own line and lets the meta wrap
+              // beneath it. Lining the four controls up in one row only works
+              // from `sm` up, where a phone-width name is a truncated stub.
               <li
                 key={entry.id}
-                className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 transition-colors hover:bg-secondary/30"
+                className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 transition-colors hover:bg-secondary/30 sm:flex-nowrap"
               >
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                <span className="w-full min-w-0 text-sm font-medium leading-snug sm:w-auto sm:flex-1 sm:self-center sm:truncate">
                   {entry.name}
                 </span>
-                <Badge
-                  variant="secondary"
-                  className="shrink-0 border-border/70 text-[11px]"
-                >
-                  {entry.store}
-                </Badge>
-                {entry.worthAmount > 0 && (
-                  <span className="shrink-0 text-xs font-semibold tabular-nums text-primary">
-                    {formatWorth(entry.worth, entry.worthAmount)}
-                  </span>
-                )}
-                <span
-                  className={cn(
-                    "inline-flex shrink-0 items-center gap-1 text-xs font-medium tabular-nums",
-                    URGENCY_TEXT[urgencyLevel(entry.endsAt, now)],
+
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-none">
+                  <Badge
+                    variant="secondary"
+                    className="shrink-0 border-border/70 text-[11px]"
+                  >
+                    {entry.store}
+                  </Badge>
+                  {entry.worthAmount > 0 && (
+                    <span className="shrink-0 text-xs font-semibold tabular-nums text-primary">
+                      {formatWorth(entry.worth, entry.worthAmount)}
+                    </span>
                   )}
-                >
-                  <Timer className="size-3.5" />
-                  {formatCountdown(entry.endsAt, now)}
-                </span>
+                  <span
+                    className={cn(
+                      "inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-medium tabular-nums",
+                      URGENCY_TEXT[urgencyLevel(entry.endsAt, now)],
+                    )}
+                  >
+                    <Timer className="size-3.5" />
+                    {formatCountdown(entry.endsAt, now)}
+                  </span>
+                </div>
+
                 <ExternalLinkButton
                   size="sm"
                   variant="ghost"
-                  className="h-8 shrink-0 gap-1 px-2 text-xs"
+                  className="h-9 shrink-0 gap-1 px-3 text-xs sm:h-8 sm:px-2"
                   href={entry.url}
                   aria-label={`Claim ${entry.name} on ${entry.store}`}
                 >

@@ -46,7 +46,12 @@ function Countdown({ endsAt, className }: { endsAt: number | null; className?: s
   return (
     <>
       <span aria-hidden>·</span>
-      <span className={cn("hud-num shrink-0 font-semibold", className)}>
+      <span
+        className={cn(
+          "hud-num shrink-0 whitespace-nowrap font-semibold",
+          className,
+        )}
+      >
         {formatCountdown(endsAt, now)}
       </span>
     </>
@@ -291,7 +296,7 @@ export function NotificationButton() {
             type="button"
             variant="outline"
             size="icon"
-            className="relative size-9 shrink-0"
+            className="relative size-10 shrink-0 xs:size-9"
             aria-label={
               alerts.unreadCount > 0
                 ? `Giveaway alerts, ${alerts.unreadCount} need you`
@@ -313,7 +318,16 @@ export function NotificationButton() {
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-[calc(100vw-2rem)] max-w-[22rem] p-0">
+        <PopoverContent
+          align="end"
+          sideOffset={8}
+          // Keeps a real gutter when the panel has to shift to stay on screen,
+          // which it always does on a phone narrower than the trigger offset.
+          collisionPadding={12}
+          // On a phone the panel is wider than the space to the left of the
+          // bell, so it spans the viewport instead of drifting off the edge.
+          className="w-[calc(100vw-1.5rem)] max-w-[22rem] p-0"
+        >
           <AlertList alerts={alerts} onOpenSettings={openSettings} />
         </PopoverContent>
       </Popover>
@@ -398,7 +412,7 @@ function AlertList({
         </Button>
       </div>
 
-      <div className="max-h-[24rem] overflow-y-auto">
+      <div className="max-h-[min(24rem,58dvh)] overflow-y-auto">
         {/* Deadlines first: these are the offers that actually get missed. */}
         {hasExpiring && (
           <section>
@@ -488,8 +502,8 @@ function AlertRow({
   right?: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-secondary/50">
-      <div className="size-12 shrink-0 overflow-hidden rounded-md border border-border/70 xs:size-14">
+    <div className="flex items-start gap-3 px-3 py-3 transition-colors hover:bg-secondary/50">
+      <div className="mt-0.5 size-11 shrink-0 overflow-hidden rounded-md border border-border/70 xs:size-14">
         <img
           src={thumbnail}
           alt=""
@@ -498,9 +512,13 @@ function AlertRow({
         />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium leading-tight">{name}</p>
-        <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          {store}
+        {/* Two lines rather than an ellipsis: at phone width a single truncated
+            line hides the half of a game title that identifies it. */}
+        <p className="line-clamp-2 text-[13px] font-medium leading-tight">
+          {name}
+        </p>
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+          <span className="truncate">{store}</span>
           {right}
         </p>
       </div>
@@ -508,7 +526,7 @@ function AlertRow({
         type="button"
         variant="outline"
         size="sm"
-        className="h-8 shrink-0 gap-1.5 text-xs"
+        className="h-9 shrink-0 gap-1.5 text-xs xs:h-8"
         onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
         aria-label={`Claim ${name} on ${store}`}
       >
