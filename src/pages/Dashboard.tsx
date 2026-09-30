@@ -13,7 +13,14 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
-import { DEFAULT_FILTERS, useGiveaways } from "@/hooks/use-giveaways";
+import { InstallAppButton } from "@/components/InstallAppButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useNow, useSearchHotkey } from "@/hooks/use-now";
+import {
+  DEFAULT_FILTERS,
+  formatFreshness,
+  useGiveaways,
+} from "@/hooks/use-giveaways";
 import { api } from "@/convex/_generated/api";
 import {
   GIVEAWAY_SORTS,
@@ -21,9 +28,11 @@ import {
   PLATFORM_GROUPS,
   type Giveaway,
 } from "@/lib/giveaways";
+import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import {
   Bookmark,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -50,6 +59,7 @@ export default function Dashboard() {
   const [sortBy, setSortBy] = useState(DEFAULT_FILTERS.sortBy);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"browse" | "library">("browse");
+  const [libraryFilter, setLibraryFilter] = useState<"saved" | "claimed">("saved");
   const [page, setPage] = useState(1);
   const [refreshToken, setRefreshToken] = useState(0);
   const [selected, setSelected] = useState<Giveaway | null>(null);
@@ -58,16 +68,41 @@ export default function Dashboard() {
     () => ({ platform, type, sortBy, search }),
     [platform, type, sortBy, search],
   );
-  const { giveaways, total, stale, isLoading, error } = useGiveaways(
-    filters,
-    page,
-    PAGE_SIZE,
-    refreshToken,
-  );
+  const { giveaways, total, stale, fetchedAt, trendingIds, isLoading, error } =
+    useGiveaways(filters, page, PAGE_SIZE, refreshToken);
+
+  const searchRef = useSearchHotkey<HTMLInputElement>();
+  const now = useNow();
 
   // Always subscribed so save state stays live on the grid without refetching.
   const savedIds = useQuery(api.library.savedIds) ?? NO_IDS;
   const toggleSaved = useMutation(api.library.toggleSaved);
+  const setClaimed = useMutation(api.library.setClaimed);
+
+  const savedList = useQuery(api.library.listSaved);
+  const claimedSet = useMemo(
+    () =>
+      new Set(
+        (savedList ?? [])
+          .filter((item) => item.claimedAt !== null)
+          .map((item) => item.giveawayId),
+      ),
+    [savedList],
+  );
+
+  const handleToggleClaimed = async (giveaway: Giveaway) => {
+    const next = !claimedSet.has(giveaway.id);
+    try {
+      await setClaimed({ giveawayId: giveaway.id, claimed: next });
+      toast.success(
+        next
+          ? `${giveaway.name} moved to Claimed`
+          : `${giveaway.name} moved back to Saved`,
+      );
+    } catch {
+      toast.error("Could not update that giveaway.");
+    }
+  };
 
   const savedSet = useMemo(() => new Set(savedIds), [savedIds]);
 
@@ -129,6 +164,7 @@ export default function Dashboard() {
           <div className="relative ml-auto hidden w-full max-w-sm md:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              ref={searchRef}
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
@@ -136,8 +172,11 @@ export default function Dashboard() {
               }}
               placeholder="Search giveaways"
               aria-label="Search giveaways"
-              className="h-9 bg-secondary/60 pl-9 pr-9 text-sm"
+              className="h-9 bg-secondary/60 pl-9 pr-14 text-sm"
             />
+            <kbd className="pointer-events-none absolute right-2.5 inline-flex select-none items-center rounded border border-border/70 bg-card/70 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+              ⌘K
+            </kbd>
             {search && (
               <button
                 type="button"
@@ -154,6 +193,8 @@ export default function Dashboard() {
           </div>
 
           <div className="ml-auto flex items-center gap-2 md:ml-0">
+            <InstallAppButton className="hidden sm:inline-flex" />
+            <ThemeToggle />
             <span className="hidden text-sm text-muted-foreground lg:inline">
               {user?.name || user?.email || "Signed in"}
             </span>
@@ -219,6 +260,7 @@ export default function Dashboard() {
             <div className="relative md:hidden">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                ref={searchRef}
                 value={search}
                 onChange={(event) => {
                   setSearch(event.target.value);
@@ -312,7 +354,28 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        )}          {/* ------------------------------------------------------------- Grid */}
+        )}          {showLibrary && (
+          <div className="mt-6 flex items-center gap-1.5">
+            {(["saved", "claimed"] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setLibraryFilter(key)}
+                aria-pressed={libraryFilter === key}
+                className={cn(
+                  "h-8 rounded-full border px-3.5 text-[13px] font-medium capitalize transition-colors",
+                  libraryFilter === key
+                    ? "border-transparent bg-foreground text-background"
+                    : "border-border/80 bg-card text-muted-foreground hover:border-border hover:text-foreground",
+                )}
+              >
+                {key}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- Grid */}
         <div className="mt-8">
           {!showLibrary && stale && giveaways.length > 0 && (
             <p className="mb-5 rounded-lg border border-border/70 bg-secondary/50 px-4 py-2.5 text-xs text-muted-foreground">
@@ -323,6 +386,8 @@ export default function Dashboard() {
             <LibraryGrid
               onSelect={setSelected}
               onToggleSave={handleToggleSave}
+              onToggleClaimed={handleToggleClaimed}
+              filter={libraryFilter}
             />
           ) : error ? (
             <EmptyState
@@ -350,7 +415,10 @@ export default function Dashboard() {
                         key={giveaway.id}
                         giveaway={giveaway}
                         isSaved={savedSet.has(giveaway.id)}
+                        isClaimed={claimedSet.has(giveaway.id)}
+                        isTrending={trendingIds.has(giveaway.id)}
                         onToggleSave={handleToggleSave}
+                        onToggleClaimed={handleToggleClaimed}
                         onSelect={setSelected}
                       />
                     ))}
@@ -370,10 +438,15 @@ export default function Dashboard() {
 
               {giveaways.length > 0 && (
                 <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                  <span className="text-sm tabular-nums text-muted-foreground">
-                    Showing {(page - 1) * PAGE_SIZE + 1}–
-                    {Math.min(page * PAGE_SIZE, total)} of {total}
+              <span className="text-sm tabular-nums text-muted-foreground">
+                Showing {(page - 1) * PAGE_SIZE + 1}–
+                {Math.min(page * PAGE_SIZE, total)} of {total}
+                {fetchedAt && (
+                  <span className="ml-2">
+                    · Updated {formatFreshness(fetchedAt, now)}
                   </span>
+                )}
+              </span>
                   <div className="flex items-center gap-2">
                     <Button
                       type="button"
@@ -410,19 +483,25 @@ export default function Dashboard() {
           if (!open) setSelected(null);
         }}
         isSaved={selected ? savedSet.has(selected.id) : false}
+        isClaimed={selected ? claimedSet.has(selected.id) : false}
         onToggleSave={handleToggleSave}
+        onToggleClaimed={handleToggleClaimed}
       />
     </div>
   );
 }
 
-/** The signed-in user's saved offers, rendered from the Convex library table. */
+/** The signed-in user's saved offers, split into still-hunting vs redeemed. */
 function LibraryGrid({
   onSelect,
   onToggleSave,
+  onToggleClaimed,
+  filter,
 }: {
   onSelect: (giveaway: Giveaway) => void;
   onToggleSave: (giveaway: Giveaway) => void;
+  onToggleClaimed: (giveaway: Giveaway) => void;
+  filter: "saved" | "claimed";
 }) {
   const saved = useQuery(api.library.listSaved);
 
@@ -446,9 +525,27 @@ function LibraryGrid({
     );
   }
 
+  const rows = saved.filter((item) =>
+    filter === "claimed" ? item.claimedAt !== null : item.claimedAt === null,
+  );
+
+  if (rows.length === 0) {
+    return (
+      <EmptyState
+        title={filter === "claimed" ? "Nothing claimed yet" : "Nothing left to claim"}
+        body={
+          filter === "claimed"
+            ? "Once you redeem an offer, mark it claimed and it moves here so you always know what you still own."
+            : "Every saved offer has been redeemed. Nice work."
+        }
+        icon={<Check className="size-5" />}
+      />
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {saved.map((item) => (
+      {rows.map((item) => (
         <GiveawayCard
           key={item.id}
           giveaway={{
@@ -473,7 +570,9 @@ function LibraryGrid({
             status: "Active",
           }}
           isSaved
+          isClaimed={item.claimedAt !== null}
           onToggleSave={onToggleSave}
+          onToggleClaimed={onToggleClaimed}
           onSelect={onSelect}
         />
       ))}

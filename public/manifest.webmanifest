@@ -1,17 +1,24 @@
 {
-  "name": "freebuff.com application",
-  "short_name": "freebuff.com",
-  "description": "freebuff.com application",
+  "name": "Grantdrop — Free PC Game Giveaways",
+  "short_name": "Grantdrop",
+  "description": "Every free PC game giveaway on one board. Filter by platform, save offers to your library, and claim before the timer runs out.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#fbfbf9",
+  "theme_color": "#1c1c1e",
   "icons": [
     {
       "src": "/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

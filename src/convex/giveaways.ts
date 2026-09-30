@@ -195,6 +195,9 @@ export const listGiveaways = action({
       items: all.slice(start, start + pageSize),
       total: all.length,
       stale,
+      // When this slice was actually produced upstream, so the UI can say
+      // "updated 2 min ago" instead of implying the data is live.
+      fetchedAt: Date.now(),
     };
   },
 });

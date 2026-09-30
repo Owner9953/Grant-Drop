@@ -147,14 +147,28 @@ export function formatCountdown(endsAt: number | null, now = Date.now()): string
   return `${minutes}m left`;
 }
 
-/** Fraction of the offer window already elapsed, for the urgency meter. */
-export function urgencyLevel(endsAt: number | null, now = Date.now()): "none" | "low" | "high" {
+export type Urgency = "none" | "normal" | "warning" | "critical";
+
+/**
+ * Three tiers plus "no deadline", driving the countdown colour:
+ * under 24h is amber, under 6h is red.
+ */
+export function urgencyLevel(endsAt: number | null, now = Date.now()): Urgency {
   if (endsAt === null) return "none";
   const remaining = endsAt - now;
   if (remaining <= 0) return "none";
-  if (remaining < 24 * 3_600_000) return "high";
-  return "low";
+  if (remaining < 6 * 3_600_000) return "critical";
+  if (remaining < 24 * 3_600_000) return "warning";
+  return "normal";
 }
+
+/** Tailwind text colour for a countdown urgency tier. */
+export const URGENCY_TEXT: Record<Urgency, string> = {
+  none: "text-muted-foreground",
+  normal: "text-muted-foreground",
+  warning: "text-amber-600 dark:text-amber-400",
+  critical: "text-destructive",
+};
 
 export function compactNumber(value: number): string {
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, "")}m`;

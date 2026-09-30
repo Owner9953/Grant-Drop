@@ -8,16 +8,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useNow } from "@/hooks/use-now";
 import {
   compactNumber,
   formatCountdown,
   formatWorth,
   type Giveaway,
   tidyDescription,
+  URGENCY_TEXT,
   urgencyLevel,
 } from "@/lib/giveaways";
 import { cn } from "@/lib/utils";
-import { Bookmark, ExternalLink, Timer, Users } from "lucide-react";
+import { Bookmark, Check, ExternalLink, Timer, Users } from "lucide-react";
 
 /** Full offer view: art, value, deadline, description and claim steps. */
 export function GiveawayDetailDialog({
@@ -26,20 +28,26 @@ export function GiveawayDetailDialog({
   onOpenChange,
   isSaved,
   onToggleSave,
+  isClaimed,
+  onToggleClaimed,
 }: {
   giveaway: Giveaway | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isSaved: boolean;
   onToggleSave: (giveaway: Giveaway) => void;
+  isClaimed?: boolean;
+  onToggleClaimed?: (giveaway: Giveaway) => void;
 }) {
+  const now = useNow();
+
   if (!giveaway) return null;
 
   const steps = giveaway.instructions
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean);
-  const urgency = urgencyLevel(giveaway.endsAt);
+  const urgency = urgencyLevel(giveaway.endsAt, now);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -100,10 +108,10 @@ export function GiveawayDetailDialog({
               <dd
                 className={cn(
                   "mt-1 text-sm font-semibold tabular-nums",
-                  urgency === "high" && "text-destructive",
+                  URGENCY_TEXT[urgency],
                 )}
               >
-                {formatCountdown(giveaway.endsAt)}
+                {formatCountdown(giveaway.endsAt, now)}
               </dd>
             </div>
             <div className="bg-card px-4 py-3.5">
@@ -164,6 +172,21 @@ export function GiveawayDetailDialog({
               <Bookmark className={cn("size-4", isSaved && "fill-current text-primary")} />
               {isSaved ? "In your library" : "Save for later"}
             </Button>
+            {onToggleClaimed && isSaved && (
+              <Button
+                type="button"
+                variant="outline"
+                className={cn(
+                  "h-10 gap-1.5 sm:w-auto",
+                  isClaimed && "border-primary text-primary hover:text-primary",
+                )}
+                aria-pressed={Boolean(isClaimed)}
+                onClick={() => onToggleClaimed(giveaway)}
+              >
+                <Check className={cn("size-4", !isClaimed && "opacity-40")} />
+                {isClaimed ? "Claimed" : "Mark claimed"}
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

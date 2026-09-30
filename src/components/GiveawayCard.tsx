@@ -2,15 +2,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLinkButton } from "@/components/ExternalLinkButton";
 import { cn } from "@/lib/utils";
+import { useNow } from "@/hooks/use-now";
 import {
   compactNumber,
   formatCountdown,
   formatWorth,
   isFreshGiveaway,
   type Giveaway,
+  URGENCY_TEXT,
   urgencyLevel,
 } from "@/lib/giveaways";
-import { Bookmark, ExternalLink, Timer, Users } from "lucide-react";
+import { Bookmark, Check, ExternalLink, Flame, Timer, Users } from "lucide-react";
 
 /**
  * The offer tile used on both the landing page and the app grid. `onSelect`
@@ -22,16 +24,24 @@ export function GiveawayCard({
   isSaved,
   onToggleSave,
   onSelect,
+  isTrending,
+  isClaimed,
+  onToggleClaimed,
   className,
 }: {
   giveaway: Giveaway;
   isSaved?: boolean;
   onToggleSave?: (giveaway: Giveaway) => void;
   onSelect?: (giveaway: Giveaway) => void;
+  isTrending?: boolean;
+  isClaimed?: boolean;
+  onToggleClaimed?: (giveaway: Giveaway) => void;
   className?: string;
 }) {
-  const urgency = urgencyLevel(giveaway.endsAt);
-  const isFresh = isFreshGiveaway(giveaway.publishedAt);
+  // One shared clock for the whole grid rather than a timer per card.
+  const now = useNow();
+  const urgency = urgencyLevel(giveaway.endsAt, now);
+  const isFresh = isFreshGiveaway(giveaway.publishedAt, now);
 
   return (
     <article
@@ -56,6 +66,21 @@ export function GiveawayCard({
             {isFresh && (
               <Badge className="border-0 bg-primary text-[11px] font-semibold text-primary-foreground">
                 Just in
+              </Badge>
+            )}
+            {isTrending && !isFresh && (
+              <Badge
+                variant="secondary"
+                className="gap-1 border-0 bg-background/85 text-[11px] font-semibold text-foreground backdrop-blur-sm"
+              >
+                <Flame className="size-3 text-orange-500" />
+                Trending
+              </Badge>
+            )}
+            {isClaimed && (
+              <Badge className="gap-1 border-0 bg-primary text-[11px] font-semibold text-primary-foreground">
+                <Check className="size-3" />
+                Claimed
               </Badge>
             )}
           </div>
@@ -103,12 +128,12 @@ export function GiveawayCard({
           <div className="flex min-w-0 items-center gap-3 text-[11px] tabular-nums text-muted-foreground">
             <span
               className={cn(
-                "inline-flex items-center gap-1",
-                urgency === "high" && "font-medium text-destructive",
+                "inline-flex items-center gap-1 font-medium",
+                URGENCY_TEXT[urgency],
               )}
             >
               <Timer className="size-3.5 shrink-0" />
-              <span className="truncate">{formatCountdown(giveaway.endsAt)}</span>
+              <span className="truncate">{formatCountdown(giveaway.endsAt, now)}</span>
             </span>
             {giveaway.users > 0 && (
               <span className="inline-flex items-center gap-1">
@@ -119,6 +144,22 @@ export function GiveawayCard({
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
+            {onToggleClaimed && isSaved && (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className={cn(
+                  "h-8 gap-1 px-2 text-xs",
+                  isClaimed && "text-primary hover:text-primary",
+                )}
+                aria-pressed={Boolean(isClaimed)}
+                onClick={() => onToggleClaimed(giveaway)}
+              >
+                <Check className={cn("size-3", !isClaimed && "opacity-40")} />
+                {isClaimed ? "Claimed" : "Mark claimed"}
+              </Button>
+            )}
             {onSelect && (
               <Button
                 type="button"

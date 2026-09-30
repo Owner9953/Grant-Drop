@@ -11,7 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DEFAULT_FILTERS, useFeaturedGiveaways, useGiveaways } from "@/hooks/use-giveaways";
+import { InstallAppButton } from "@/components/InstallAppButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useNow, useSearchHotkey } from "@/hooks/use-now";
+import {
+  DEFAULT_FILTERS,
+  formatFreshness,
+  useFeaturedGiveaways,
+  useGiveaways,
+} from "@/hooks/use-giveaways";
 import { useAuth } from "@/hooks/use-auth";
 import { api } from "@/convex/_generated/api";
 import {
@@ -105,11 +113,15 @@ export default function Landing() {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Giveaway | null>(null);
 
-  const { giveaways, total, isLoading, error } = useGiveaways(
-    { platform, type: DEFAULT_FILTERS.type, sortBy, search },
-    page,
-    LIVE_PAGE_SIZE,
-  );
+  const { giveaways, total, fetchedAt, trendingIds, isLoading, error } =
+    useGiveaways(
+      { platform, type: DEFAULT_FILTERS.type, sortBy, search },
+      page,
+      LIVE_PAGE_SIZE,
+    );
+
+  const searchRef = useSearchHotkey<HTMLInputElement>();
+  const now = useNow();
 
   // Returns [] for signed-out visitors, so bookmarks simply read as unsaved.
   const savedIds = useQuery(api.library.savedIds) ?? NO_IDS;
@@ -167,6 +179,8 @@ export default function Landing() {
             </a>
           </div>
           <div className="flex items-center gap-2">
+            <InstallAppButton />
+            <ThemeToggle />
             {isAuthenticated ? (
               <Button asChild size="sm" className="gap-1.5">
                 <Link to="/dashboard">
@@ -305,6 +319,7 @@ export default function Landing() {
           <div className="relative sm:max-w-xs sm:flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              ref={searchRef}
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
@@ -312,8 +327,11 @@ export default function Landing() {
               }}
               placeholder="Search games"
               aria-label="Search games"
-              className="h-10 bg-card pl-9 pr-9"
+              className="h-10 bg-card pl-9 pr-20"
             />
+            <kbd className="pointer-events-none absolute right-2.5 hidden select-none items-center gap-0.5 rounded border border-border/70 bg-secondary/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-flex">
+              ⌘K
+            </kbd>
             {search && (
               <button
                 type="button"
@@ -390,6 +408,7 @@ export default function Landing() {
                   <GiveawayCard
                     giveaway={giveaway}
                     isSaved={savedSet.has(giveaway.id)}
+                    isTrending={trendingIds.has(giveaway.id)}
                     onToggleSave={handleToggleSave}
                     onSelect={setSelected}
                   />
@@ -428,6 +447,9 @@ export default function Landing() {
             <span className="text-sm tabular-nums text-muted-foreground">
               Showing {(page - 1) * LIVE_PAGE_SIZE + 1}–
               {Math.min(page * LIVE_PAGE_SIZE, total)} of {total}
+              {fetchedAt && (
+                <span className="ml-2">· Updated {formatFreshness(fetchedAt, now)}</span>
+              )}
             </span>
             <div className="flex items-center gap-2">
               <Button

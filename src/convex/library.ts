@@ -30,6 +30,7 @@ export const listSaved = query({
         url: row.url,
         endsAt: row.endsAt ?? null,
         savedAt: row.savedAt,
+        claimedAt: row.claimedAt ?? null,
       }));
   },
 });
@@ -88,6 +89,39 @@ export const toggleSaved = mutation({
       savedAt: Date.now(),
     });
     return { saved: true };
+  },
+});
+
+/** Moves a saved offer into (or back out of) the Claimed state. */
+export const setClaimed = mutation({
+  args: {
+    giveawayId: v.number(),
+    claimed: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("You must be signed in to update your library.");
+    }
+    const row = await ctx.db
+      .query("savedGiveaways")
+      .withIndex("by_user_and_giveaway", (q) =>
+        q.eq("userId", userId).eq("giveawayId", args.giveawayId),
+      )
+      .first();
+
+    if (!row) {
+      // Marking something claimed that was never saved is a no-op rather than
+      // an error: the client shouldn't have to sequence the two calls.
+      return { updated: false };
+    }
+
+    if (args.claimed) {
+      await ctx.db.patch(row._id, { claimedAt: row.claimedAt ?? Date.now() });
+    } else {
+      await ctx.db.patch(row._id, { claimedAt: undefined });
+    }
+    return { updated: true };
   },
 });
 

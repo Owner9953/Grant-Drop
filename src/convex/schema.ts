@@ -44,6 +44,9 @@ const schema = defineSchema(
       url: v.string(),
       endsAt: v.optional(v.number()),
       savedAt: v.number(),
+      // Set once the user actually redeems the offer, so the library can split
+      // "still hunting" from "already in my games".
+      claimedAt: v.optional(v.number()),
     })
       .index("by_user", ["userId"])
       .index("by_user_and_giveaway", ["userId", "giveawayId"]),
