@@ -1,6 +1,7 @@
+import { BrandMark } from "@/components/BrandMark";
 import { cn } from "@/lib/utils";
 
-/** Compact brand mark: a jade "claimed" chip beside the product name. */
+/** Brand lockup: the mark beside the product name. */
 export function Wordmark({
   className,
   tone = "default",
@@ -10,17 +11,13 @@ export function Wordmark({
 }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <BrandMark tone={tone} />
       <span
         className={cn(
-          "grid size-7 place-items-center rounded-lg text-[13px] font-bold",
-          tone === "inverted"
-            ? "bg-white text-neutral-900"
-            : "bg-foreground text-background",
+          "text-[15px] font-semibold tracking-tight",
+          tone === "inverted" && "text-white",
         )}
       >
-        G
-      </span>
-      <span className="text-[15px] font-semibold tracking-tight">
         Grant<span className="text-primary">drop</span>
       </span>
     </span>
