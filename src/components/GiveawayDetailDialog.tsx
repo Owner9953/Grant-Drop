@@ -55,10 +55,35 @@ export function GiveawayDetailDialog({
 
   if (!giveaway) return null;
 
-  const steps = giveaway.instructions
+  // The feed's `instructions` describe the *publisher's* redemption flow, and
+  // name buttons that live on the store's own site — a "Get Giveaway" button
+  // Grantdrop doesn't have. They cannot be presented as our instructions, so
+  // they are kept verbatim, attributed to the store, and folded away.
+  const storeSteps = giveaway.instructions
     .split(/\r?\n/)
     .map((line) => stripStepNumber(line.trim()))
     .filter(Boolean);
+
+  // What actually happens in Grantdrop, in the order it happens.
+  const claimFlow = [
+    {
+      title: giveaway.endsAt === null ? "Note there's no deadline" : "Check the clock",
+      body:
+        giveaway.endsAt === null
+          ? `${giveaway.store} publishes no end date for this one, so it can be pulled without warning. Take it while it's there.`
+          : `${formatCountdown(giveaway.endsAt, now)} on the timer above, counting down live. Leave this sheet open and it stays accurate.`,
+    },
+    {
+      title: `Claim on ${giveaway.store}`,
+      body: `The button below opens ${giveaway.store}'s own giveaway page in a new tab. Eligibility, login and redemption all happen on their side — Grantdrop never sees your account.`,
+    },
+    {
+      title: isClaimed ? "Already in your games" : "Mark it claimed",
+      body: isClaimed
+        ? "You've marked this as redeemed, so it sits under Claimed and out of your saved list."
+        : "Once the key or download is in your account, mark it claimed so you always know what's still waiting to be picked up.",
+    },
+  ];
   const urgency = urgencyLevel(giveaway.endsAt, now);
   const remaining = msRemaining(giveaway.endsAt, now);
   const expired = remaining !== null && remaining <= 0;
@@ -116,7 +141,8 @@ export function GiveawayDetailDialog({
               {giveaway.name}
             </DialogTitle>
             <DialogDescription className="sr-only">
-              Details and claim instructions for {giveaway.name}.
+              Offer details, deadline and how to claim {giveaway.name} on{" "}
+              {giveaway.store}.
             </DialogDescription>
           </DialogHeader>
 
@@ -162,23 +188,41 @@ export function GiveawayDetailDialog({
             <p className="text-sm leading-6 text-muted-foreground">{summary}</p>
           )}
 
-          {steps.length > 0 && (
-            <section>
-              <SectionLabel>How to claim</SectionLabel>
-              <ol className="mt-3 space-y-2.5">
-                {steps.map((step, index) => (
-                  <li
-                    key={index}
-                    className="flex gap-3 text-sm leading-6 text-muted-foreground"
-                  >
-                    <span className="hud-num mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground">
-                      {index + 1}
+          <section>
+            <SectionLabel>How to claim</SectionLabel>
+            <ol className="mt-3 space-y-3">
+              {claimFlow.map((step, index) => (
+                <li key={step.title} className="flex gap-3">
+                  <span className="hud-num mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground">
+                    {index + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium leading-5">{step.title}</p>
+                    <p className="mt-0.5 text-sm leading-6 text-muted-foreground">
+                      {step.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          {storeSteps.length > 0 && (
+            <details className="group rounded-lg border border-border/70 bg-secondary/30 px-3.5 py-3">
+              <summary className="cursor-pointer list-none text-xs font-semibold text-muted-foreground transition-colors marker:content-none [&::-webkit-details-marker]:hidden hover:text-foreground">
+                What {giveaway.store} asks for
+              </summary>
+              <ul className="mt-2.5 space-y-1.5 text-xs leading-5 text-muted-foreground">
+                {storeSteps.map((step, index) => (
+                  <li key={index} className="flex gap-2">
+                    <span aria-hidden className="select-none text-muted-foreground/50">
+                      &middot;
                     </span>
                     <span className="min-w-0">{step}</span>
                   </li>
                 ))}
-              </ol>
-            </section>
+              </ul>
+            </details>
           )}
 
           {giveaway.platforms.length > 0 && (

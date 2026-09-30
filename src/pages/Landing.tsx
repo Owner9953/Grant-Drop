@@ -71,7 +71,7 @@ const FEATURES = [
   {
     icon: Zap,
     title: "Fresh every visit",
-    body: "The feed is fetched server-side on a short cache, so pages load fast without ever showing a stale giveaway.",
+    body: "The feed is fetched server-side and cached for five minutes, so pages load fast. If the upstream service drops out, Grantdrop keeps serving the last good list and tells you it's doing so.",
   },
 ];
 
@@ -84,12 +84,12 @@ const STEPS = [
   {
     step: "02",
     title: "Scan what's live",
-    body: "Open the hub and see every active giveaway ranked by what it's worth, with the deadline on each card.",
+    body: "Open the hub and see every active giveaway, newest first, with the deadline and retail value on each card. Re-sort by value or popularity whenever you like.",
   },
   {
     step: "03",
     title: "Save, then claim",
-    body: "Bookmark the ones you want, follow the countdown, and claim straight from the store before it expires.",
+    body: "Bookmark the ones you want, follow the countdown, then use Claim to jump straight to the store's own page before the offer expires.",
   },
 ];
 
