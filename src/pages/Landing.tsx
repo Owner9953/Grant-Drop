@@ -45,8 +45,8 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 const LIVE_PAGE_SIZE = 9;
@@ -101,13 +101,6 @@ const TICKER_ICON: Record<string, typeof ShieldCheck | null> = {
   "drm-free": ShieldCheck,
 };
 
-/**
- * The footer's platform column. A short, deliberately chosen set rather than
- * all eleven: the ones people actually hunt on, plus DRM-free, which is the
- * reason to trust this feed over a plain listing site.
- */
-const FOOTER_PLATFORMS = ["steam", "epic", "gog", "itchio", "drm-free"] as const;
-
 export default function Landing() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -117,22 +110,7 @@ export default function Landing() {
   const totalWorth = topOffers.reduce((sum, item) => sum + item.worthAmount, 0);
 
   // The live board is fully browsable signed-out.
-  //
-  // The platform filter is read straight from the URL rather than held in
-  // state, so a link like /?platform=steam actually applies — which is what
-  // the footer's platform column links to — and a filtered board is shareable.
-  const [searchParams, setSearchParams] = useSearchParams();
-  const requestedPlatform = searchParams.get("platform");
-  const platform =
-    requestedPlatform &&
-    PLATFORM_GROUPS.some((group) => group.value === requestedPlatform)
-      ? requestedPlatform
-      : DEFAULT_FILTERS.platform;
-  const setPlatform = (value: string) =>
-    setSearchParams(
-      value === DEFAULT_FILTERS.platform ? {} : { platform: value },
-      { replace: true },
-    );
+  const [platform, setPlatform] = useState(DEFAULT_FILTERS.platform);
   // Alias so the platform strip and the board's <Select> read the same value
   // without shadowing the `platform` loop variable inside the strip map.
   const platformFilter = platform;
@@ -685,72 +663,35 @@ export default function Landing() {
 
       {/* -------------------------------------------------------------- Footer */}
       <footer className="border-t border-border/60 bg-background">
-        <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-12 pb-safe sm:px-5 sm:pt-14">
-          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr] lg:gap-8">
-            {/* Brand + the two facts a visitor needs before trusting the list. */}
-            <div>
-              <Link to="/" aria-label="Grantdrop home" className="inline-flex">
-                <Wordmark />
+        <div className="mx-auto w-full max-w-6xl px-4 py-8 pb-safe sm:px-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <Wordmark />
+            <nav
+              aria-label="Footer"
+              className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground"
+            >
+              <a href="#live" className="transition-colors hover:text-foreground">
+                Live offers
+              </a>
+              <a href="#features" className="transition-colors hover:text-foreground">
+                Features
+              </a>
+              <a href="#how" className="transition-colors hover:text-foreground">
+                How it works
+              </a>
+              <Link
+                to={isAuthenticated ? "/dashboard" : "/auth?returnTo=/dashboard"}
+                className="font-medium text-foreground transition-colors hover:text-primary"
+              >
+                {isAuthenticated ? "Open your hub" : "Get started free"}
               </Link>
-              <p className="mt-3 max-w-xs text-sm leading-6 text-muted-foreground">
-                Every active free giveaway on one board — PC, console and mobile,
-                pulled live from GamerPower and re-checked every five minutes.
-              </p>
-              <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-muted-foreground">
-                <ShieldCheck className="mt-px size-3.5 shrink-0 text-primary" />
-                Alerts stay in this browser. No email, no SMS, no account
-                details ever leave the app.
-              </p>
-            </div>
-
-            <FooterColumn title="Browse">
-              <FooterLink href="#live">Live offers</FooterLink>
-              <FooterLink href="#features">Features</FooterLink>
-              <FooterLink href="#how">How it works</FooterLink>
-            </FooterColumn>
-
-            <FooterColumn title="Platforms">
-              <FooterLink to={`/?platform=${DEFAULT_FILTERS.platform}#live`}>
-                All platforms
-              </FooterLink>
-              {FOOTER_PLATFORMS.map((value) => {
-                const group = PLATFORM_GROUPS.find(
-                  (item) => item.value === value,
-                );
-                if (!group) return null;
-                return (
-                  <FooterLink key={value} to={`/?platform=${value}#live`}>
-                    {group.label}
-                  </FooterLink>
-                );
-              })}
-            </FooterColumn>
-
-            <FooterColumn title="Account">
-              {isAuthenticated ? (
-                <>
-                  <FooterLink to="/dashboard">Open your hub</FooterLink>
-                  <FooterLink to="/dashboard">Saved library</FooterLink>
-                </>
-              ) : (
-                <>
-                  <FooterLink to="/auth">Sign in</FooterLink>
-                  <FooterLink to="/auth?returnTo=/dashboard">
-                    Get started free
-                  </FooterLink>
-                </>
-              )}
-            </FooterColumn>
+            </nav>
           </div>
-
-          <div className="mt-10 flex flex-col gap-2 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-start sm:justify-between sm:gap-8">
-            <p>&copy; {new Date().getFullYear()} Grantdrop</p>
-            <p className="max-w-xl sm:text-right">
-              Giveaway data provided by GamerPower. Always confirm eligibility
-              on the store page before claiming — Grantdrop is not affiliated
-              with any publisher.
-            </p>
-          </div>
+          <p className="mt-6 border-t border-border/60 pt-5 text-xs leading-5 text-muted-foreground">
+            &copy; {new Date().getFullYear()} Grantdrop. Giveaway data provided
+            by GamerPower — confirm eligibility on the store page before
+            claiming. Not affiliated with any publisher.
+          </p>
         </div>
       </footer>
 
@@ -764,49 +705,5 @@ export default function Landing() {
         onToggleSave={handleToggleSave}
       />
     </div>
-  );
-}
-
-function FooterColumn({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
-  return (
-    <div>
-      <h3 className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-        {title}
-      </h3>
-      <ul className="mt-3.5 space-y-2.5">{children}</ul>
-    </div>
-  );
-}
-
-/** One footer link. Internal routes go through <Link>, anchors stay anchors. */
-function FooterLink({
-  children,
-  to,
-  href,
-}: {
-  children: ReactNode;
-  to?: string;
-  href?: string;
-}) {
-  const className =
-    "inline-block text-sm text-muted-foreground transition-colors hover:text-foreground";
-  return (
-    <li>
-      {href ? (
-        <a href={href} className={className}>
-          {children}
-        </a>
-      ) : (
-        <Link to={to ?? "/"} className={className}>
-          {children}
-        </Link>
-      )}
-    </li>
   );
 }
