@@ -235,7 +235,7 @@ export default function Landing() {
             <h1 className="text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.035em] sm:text-6xl">
               Every free game,
               <br />
-              <span className="text-sweep">every platform.</span>
+              <span className="text-sweep">Every platform.</span>
             </h1>
             <p className="text-balance mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground">
               Grantdrop pulls active giveaways from every major storefront — PC,
@@ -616,16 +616,16 @@ export default function Landing() {
       </section>
 
       {/* ----------------------------------------------------------------- CTA */}
-      <section className="border-t border-border/60 bg-foreground text-background">
+      <section className="cta-band overflow-hidden border-t border-border/60">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-5 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <div className="mx-auto mb-6 grid size-12 place-items-center rounded-xl bg-background/10">
+            <div className="cta-band-icon mx-auto mb-6 grid size-12 place-items-center rounded-xl">
               <LayoutGrid className="size-6" />
             </div>
             <h2 className="text-balance text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
               Your next free game is sitting on the board right now
             </h2>
-            <p className="text-balance mx-auto mt-4 max-w-lg text-[15px] leading-7 text-background/70">
+            <p className="cta-band-muted text-balance mx-auto mt-4 max-w-lg text-[15px] leading-7">
               Create an account and start building a library across PC, console
               and mobile that would otherwise cost hundreds of dollars.
             </p>
@@ -633,7 +633,7 @@ export default function Landing() {
               <Button
                 asChild
                 size="lg"
-                className="h-11 w-full bg-background px-6 text-foreground hover:bg-background/90 sm:w-auto"
+                className="cta-band-primary h-11 w-full px-6 sm:w-auto"
               >
                 <Link to={isAuthenticated ? "/dashboard" : "/auth?returnTo=/dashboard"}>
                   {isAuthenticated ? "Open your hub" : "Get started free"}
@@ -644,7 +644,7 @@ export default function Landing() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="h-11 w-full border-background/25 bg-transparent px-6 text-background hover:bg-background/10 hover:text-background sm:w-auto"
+                className="cta-band-ghost h-11 w-full px-6 sm:w-auto"
               >
                 <a href="#live">
                   <BellRing className="size-4" />
@@ -652,8 +652,8 @@ export default function Landing() {
                 </a>
               </Button>
             </div>
-            <p className="mt-6 inline-flex items-center gap-2 text-xs text-background/50">
-              <ShieldCheck className="size-3.5" />
+            <p className="cta-band-muted mt-6 inline-flex items-center gap-2 text-xs">
+              <ShieldCheck className="size-3.5 shrink-0" />
               Claims are completed on the publisher's own store — Grantdrop never
               asks for your account details.
             </p>
