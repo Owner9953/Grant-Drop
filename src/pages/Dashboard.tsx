@@ -13,9 +13,12 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
+import { CalendarAgenda } from "@/components/CalendarAgenda";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useNow, useSearchHotkey } from "@/hooks/use-now";
+import { ValueExplainer } from "@/components/ValueExplainer";
+import { downloadCsv, toCsv } from "@/lib/library-csv";
+import { useListNavigation, useNow, useSearchHotkey } from "@/hooks/use-now";
 import {
   DEFAULT_FILTERS,
   formatFreshness,
@@ -32,11 +35,14 @@ import { cn } from "@/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import {
   Bookmark,
+  CalendarDays,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Download,
   Inbox,
+  LayoutGrid,
   LogOut,
   Search,
   SlidersHorizontal,
@@ -60,6 +66,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"browse" | "library">("browse");
   const [libraryFilter, setLibraryFilter] = useState<"saved" | "claimed">("saved");
+  const [view, setView] = useState<"list" | "calendar">("list");
   const [page, setPage] = useState(1);
   const [refreshToken, setRefreshToken] = useState(0);
   const [selected, setSelected] = useState<Giveaway | null>(null);
@@ -73,6 +80,7 @@ export default function Dashboard() {
 
   const searchRef = useSearchHotkey<HTMLInputElement>();
   const now = useNow();
+  const { activeIndex, itemRefs } = useListNavigation(giveaways.length);
 
   // Always subscribed so save state stays live on the grid without refetching.
   const savedIds = useQuery(api.library.savedIds) ?? NO_IDS;
@@ -90,8 +98,7 @@ export default function Dashboard() {
     [savedList],
   );
 
-  const handleToggleClaimed = async (giveaway: Giveaway) => {
-    const next = !claimedSet.has(giveaway.id);
+  const handleToggleClaimed = async (giveaway: Giveaway) => {    const next = !claimedSet.has(giveaway.id);
     try {
       await setClaimed({ giveawayId: giveaway.id, claimed: next });
       toast.success(
@@ -132,6 +139,23 @@ export default function Dashboard() {
         err instanceof Error ? err.message : "Could not update your library.",
       );
     }
+  };
+
+  const handleExportCsv = () => {
+    if (!savedList || savedList.length === 0) return;
+    const csv = toCsv(
+      savedList.map((item) => ({
+        name: item.name,
+        store: item.store,
+        worth: item.worth,
+        platforms: item.store,
+        endsAt: item.endsAt,
+        savedAt: item.savedAt,
+        claimedAt: item.claimedAt,
+      })),
+    );
+    downloadCsv("grantdrop-library.csv", csv);
+    toast.success(`Exported ${savedList.length} saved offers`);
   };
 
   const resetFilters = () => {
@@ -340,6 +364,8 @@ export default function Dashboard() {
                   </SelectContent>
                 </Select>
 
+                {sortBy === "value" && <ValueExplainer />}
+
                 {hasActiveFilters && (
                   <Button
                     type="button"
@@ -351,29 +377,80 @@ export default function Dashboard() {
                     Reset
                   </Button>
                 )}
+
+                <div
+                  className="flex h-9 items-center gap-0.5 rounded-lg border border-border/80 bg-card p-0.5"
+                  role="group"
+                  aria-label="Switch between list and calendar view"
+                >
+                  {(
+                    [
+                      { key: "list", label: "List", icon: LayoutGrid },
+                      { key: "calendar", label: "Calendar", icon: CalendarDays },
+                    ] as const
+                  ).map((option) => (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => setView(option.key)}
+                      aria-pressed={view === option.key}
+                      className={cn(
+                        "inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium transition-colors",
+                        view === option.key
+                          ? "bg-secondary text-foreground"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <option.icon className="size-3.5" />
+                      <span className="hidden sm:inline">{option.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         )}          {showLibrary && (
-          <div className="mt-6 flex items-center gap-1.5">
-            {(["saved", "claimed"] as const).map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setLibraryFilter(key)}
-                aria-pressed={libraryFilter === key}
-                className={cn(
-                  "h-8 rounded-full border px-3.5 text-[13px] font-medium capitalize transition-colors",
-                  libraryFilter === key
-                    ? "border-transparent bg-foreground text-background"
-                    : "border-border/80 bg-card text-muted-foreground hover:border-border hover:text-foreground",
-                )}
-              >
-                {key}
-              </button>
-            ))}
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              {(["saved", "claimed"] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setLibraryFilter(key)}
+                  aria-pressed={libraryFilter === key}
+                  className={cn(
+                    "h-8 rounded-full border px-3.5 text-[13px] font-medium capitalize transition-colors",
+                    libraryFilter === key
+                      ? "border-transparent bg-foreground text-background"
+                      : "border-border/80 bg-card text-muted-foreground hover:border-border hover:text-foreground",
+                  )}
+                >
+                  {key}
+                </button>
+              ))}
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="ml-auto h-8 gap-1.5 text-xs"
+              onClick={handleExportCsv}
+              disabled={!savedList || savedList.length === 0}
+            >
+              <Download className="size-3.5" />
+              Export CSV
+            </Button>
           </div>
         )}
+
+        {/* Announce result-count changes to screen readers without stealing focus. */}
+        <p aria-live="polite" aria-atomic="true" className="sr-only">
+          {isLoading
+            ? "Loading giveaways"
+            : showLibrary
+              ? `${savedList?.length ?? 0} saved offers`
+              : `${total} giveaways found`}
+        </p>
 
         {/* ------------------------------------------------------------- Grid */}
         <div className="mt-8">
@@ -405,12 +482,15 @@ export default function Dashboard() {
             />
           ) : (
             <>
+              {view === "calendar" ? (
+                <CalendarAgenda giveaways={giveaways} isLoading={isLoading} />
+              ) : (
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {isLoading
                   ? Array.from({ length: PAGE_SIZE }).map((_, index) => (
                       <GiveawayCardSkeleton key={index} />
                     ))
-                  : giveaways.map((giveaway) => (
+                  : giveaways.map((giveaway, index) => (
                       <GiveawayCard
                         key={giveaway.id}
                         giveaway={giveaway}
@@ -420,9 +500,15 @@ export default function Dashboard() {
                         onToggleSave={handleToggleSave}
                         onToggleClaimed={handleToggleClaimed}
                         onSelect={setSelected}
+                        itemIndex={index}
+                        isActiveItem={index === activeIndex}
+                        onItemRef={(position, node) => {
+                          itemRefs.current[position] = node;
+                        }}
                       />
                     ))}
               </div>
+              )}
 
               {!isLoading && giveaways.length === 0 && (
                 <EmptyState
@@ -434,10 +520,16 @@ export default function Dashboard() {
                     </Button>
                   }
                 />
-              )}
-
-              {giveaways.length > 0 && (
+              )}                  {giveaways.length > 0 && (
                 <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                  <p className="hidden text-xs text-muted-foreground lg:block">
+                    Tip: press{" "}
+                    <kbd className="rounded border border-border/70 bg-secondary/60 px-1 py-0.5 font-mono text-[10px]">J</kbd>{" "}
+                    /{" "}
+                    <kbd className="rounded border border-border/70 bg-secondary/60 px-1 py-0.5 font-mono text-[10px]">K</kbd>{" "}
+                    to move, <kbd className="rounded border border-border/70 bg-secondary/60 px-1 py-0.5 font-mono text-[10px]">↵</kbd>{" "}
+                    for details
+                  </p>
               <span className="text-sm tabular-nums text-muted-foreground">
                 Showing {(page - 1) * PAGE_SIZE + 1}–
                 {Math.min(page * PAGE_SIZE, total)} of {total}

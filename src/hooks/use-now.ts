@@ -52,3 +52,45 @@ export function useSearchHotkey<T extends HTMLInputElement>() {
 
   return ref;
 }
+
+/**
+ * J/K moves focus through a list of cards.
+ *
+ * Returns the active index and a ref callback to attach to each card, so the
+ * grid can use a roving tabindex (one tab stop, arrow-style movement) instead of
+ * making every card a tab stop. Activation is left to the component's own
+ * onKeyDown so Enter keeps working on the buttons inside a card.
+ */
+export function useListNavigation(count: number) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const itemRefs = useRef<(HTMLElement | null)[]>([]);
+
+  // Clamped during render rather than in an effect: when the list shrinks under
+  // us (filtering, paging) the index must not briefly point past the end.
+  const safeIndex = count === 0 ? 0 : Math.min(activeIndex, count - 1);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (isTypingTarget(event.target)) return;
+      if (count === 0) return;
+
+      const key = event.key.toLowerCase();
+      if (key !== "j" && key !== "k") return;
+
+      event.preventDefault();
+      setActiveIndex((current) => {
+        const next = key === "j"
+          ? Math.min(current + 1, count - 1)
+          : Math.max(current - 1, 0);
+        itemRefs.current[next]?.focus();
+        return next;
+      });
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [count]);
+
+  return { activeIndex: safeIndex, setActiveIndex, itemRefs };
+}

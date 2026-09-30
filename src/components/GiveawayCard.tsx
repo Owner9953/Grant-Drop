@@ -27,6 +27,9 @@ export function GiveawayCard({
   isTrending,
   isClaimed,
   onToggleClaimed,
+  itemIndex,
+  isActiveItem,
+  onItemRef,
   className,
 }: {
   giveaway: Giveaway;
@@ -36,6 +39,11 @@ export function GiveawayCard({
   isTrending?: boolean;
   isClaimed?: boolean;
   onToggleClaimed?: (giveaway: Giveaway) => void;
+  /** Position in a J/K-navigable list. */
+  itemIndex?: number;
+  /** Whether this card holds the grid's single tab stop. */
+  isActiveItem?: boolean;
+  onItemRef?: (index: number, node: HTMLElement | null) => void;
   className?: string;
 }) {
   // One shared clock for the whole grid rather than a timer per card.
@@ -45,9 +53,29 @@ export function GiveawayCard({
 
   return (
     <article
+      ref={
+        onItemRef && itemIndex !== undefined
+          ? (node) => onItemRef(itemIndex, node)
+          : undefined
+      }
+      tabIndex={isActiveItem ? 0 : -1}
+      onKeyDown={
+        onItemRef && onSelect
+          ? (event) => {
+              // Only when the card itself has focus, so the buttons and links
+              // inside it keep their normal Enter behaviour.
+              if (event.key === "Enter" && event.target === event.currentTarget) {
+                event.preventDefault();
+                onSelect(giveaway);
+              }
+            }
+          : undefined
+      }
       className={cn(
         "surface-card group relative flex flex-col overflow-hidden transition-all duration-300",
         "hover:-translate-y-0.5 hover:border-border hover:shadow-lg focus-within:-translate-y-0.5",
+        onItemRef &&
+          "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
     >
