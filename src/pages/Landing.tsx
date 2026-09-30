@@ -94,9 +94,13 @@ const STEPS = [
   },
 ];
 
-const TICKER = PLATFORM_GROUPS.filter((item) => item.value !== "all").map(
-  (item) => item.label,
-);
+/** Chips for the platform strip, keyed to the filter values on the live board. */
+const TICKER = PLATFORM_GROUPS.filter((item) => item.value !== "all");
+
+/** DRM-free is our differentiator, so it gets its own icon in the strip. */
+const TICKER_ICON: Record<string, typeof ShieldCheck | null> = {
+  "drm-free": ShieldCheck,
+};
 
 export default function Landing() {
   const { isAuthenticated } = useAuth();
@@ -108,6 +112,9 @@ export default function Landing() {
 
   // The live board is fully browsable signed-out.
   const [platform, setPlatform] = useState(DEFAULT_FILTERS.platform);
+  // Alias so the platform strip and the board's <Select> read the same value
+  // without shadowing the `platform` loop variable inside the strip map.
+  const platformFilter = platform;
   const [sortBy, setSortBy] = useState(DEFAULT_FILTERS.sortBy);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -267,24 +274,56 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* -------------------------------------------------------- Store ticker */}
-      <section aria-label="Supported storefronts" className="border-b border-border/60 bg-secondary/40">
-        <div className="mx-auto w-full max-w-6xl px-5 py-5">
-          <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
-            {TICKER.map((store) => (
-              <span
-                key={store}
-                className="text-[13px] font-medium tracking-tight text-muted-foreground"
-              >
-                {store}
+      {/* ------------------------------------------------------ Platform strip */}
+      <section
+        aria-label="Supported platforms"
+        className="sticky top-16 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl"
+      >
+        <div className="mx-auto w-full max-w-6xl px-5 py-3.5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="kicker">Indexed on</span>
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                tap a platform to filter the board
               </span>
-            ))}
+            </div>
+
+            <div className="-mx-1 flex snap-x gap-1.5 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:justify-end sm:overflow-visible sm:px-0 sm:pb-0">
+              {TICKER.map((platform) => {
+                const Icon = TICKER_ICON[platform.value];
+                const isActive = platform.value === platformFilter;
+                return (
+                  <button
+                    key={platform.value}
+                    type="button"
+                    onClick={() => {
+                      setPlatform(platform.value);
+                      setPage(1);
+                      document
+                        .getElementById("live")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    aria-pressed={isActive}
+                    className={cn(
+                      "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium tracking-tight transition-all duration-200",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                      isActive
+                        ? "border-primary/50 bg-primary/15 text-primary"
+                        : "border-border/70 bg-card/60 text-muted-foreground hover:-translate-y-px hover:border-primary/40 hover:bg-card hover:text-foreground",
+                    )}
+                  >
+                    {Icon && <Icon className="size-3.5 shrink-0" />}
+                    {platform.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ------------------------------------------------------------- Offers */}
-      <section id="live" className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 py-20">
+      <section id="live" className="mx-auto w-full max-w-6xl scroll-mt-36 px-5 py-20">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-xl">
             <p className="kicker">Live right now</p>
