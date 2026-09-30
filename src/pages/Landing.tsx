@@ -3,7 +3,6 @@ import { GiveawayDetailDialog } from "@/components/GiveawayDetailDialog";
 import { Wordmark } from "@/components/Wordmark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -13,7 +12,8 @@ import {
 } from "@/components/ui/select";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useNow, useSearchHotkey } from "@/hooks/use-now";
+import { useNow } from "@/hooks/use-now";
+import { GiveawaySearch } from "@/components/GiveawaySearch";
 import {
   DEFAULT_FILTERS,
   formatFreshness,
@@ -40,10 +40,8 @@ import {
   Compass,
   Gift,
   LayoutGrid,
-  Search,
   ShieldCheck,
   Sparkles,
-  X,
   Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -127,8 +125,11 @@ export default function Landing() {
       LIVE_PAGE_SIZE,
     );
 
-  const searchRef = useSearchHotkey<HTMLInputElement>();
   const now = useNow();
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
   // Returns [] for signed-out visitors, so bookmarks simply read as unsaved.
   const savedIds = useQuery(api.library.savedIds) ?? NO_IDS;
@@ -346,36 +347,12 @@ export default function Landing() {
 
         {/* Anonymous toolbar: search, store filter and sort all work signed-out. */}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative sm:max-w-xs sm:flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              ref={searchRef}
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
-              placeholder="Search games"
-              aria-label="Search games"
-              className="h-10 bg-card pl-9 pr-20"
-            />
-            <kbd className="pointer-events-none absolute right-2.5 hidden select-none items-center gap-0.5 rounded border border-border/70 bg-secondary/60 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-flex">
-              ⌘K
-            </kbd>
-            {search && (
-              <button
-                type="button"
-                aria-label="Clear search"
-                onClick={() => {
-                  setSearch("");
-                  setPage(1);
-                }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <X className="size-3.5" />
-              </button>
-            )}
-          </div>
+          <GiveawaySearch
+            value={search}
+            onChange={handleSearchChange}
+            resultCount={isLoading ? undefined : total}
+            className="sm:max-w-sm"
+          />
 
           <Select
             value={platform}

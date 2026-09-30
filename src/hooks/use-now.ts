@@ -26,14 +26,34 @@ function isTypingTarget(target: EventTarget | null): boolean {
   );
 }
 
+/** True when the element is actually rendered, not just present in the DOM. */
+function isVisible(element: HTMLElement): boolean {
+  if (typeof element.checkVisibility === "function") {
+    return element.checkVisibility();
+  }
+  return element.offsetParent !== null;
+}
+
 /**
  * Focuses a search field on Cmd/Ctrl+K, or on a bare "/" when the user isn't
  * already typing somewhere else. Returns a ref to attach to the input.
+ *
+ * A page may render this field twice — a header copy and a toolbar copy — with
+ * CSS deciding which is shown. Only one instance can win the keyboard shortcut,
+ * so each hook checks that its own input is actually visible before focusing;
+ * otherwise the shortcut would silently focus the hidden one and appear broken.
  */
 export function useSearchHotkey<T extends HTMLInputElement>() {
   const ref = useRef<T>(null);
 
   useEffect(() => {
+    const focusVisibleInput = () => {
+      const input = ref.current;
+      if (!input || !isVisible(input)) return;
+      input.focus();
+      input.select();
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       const isCommandK =
         (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
@@ -41,8 +61,7 @@ export function useSearchHotkey<T extends HTMLInputElement>() {
 
       if (isCommandK || isSlash) {
         event.preventDefault();
-        ref.current?.focus();
-        ref.current?.select();
+        focusVisibleInput();
       }
     };
 

@@ -3,7 +3,6 @@ import { GiveawayDetailDialog } from "@/components/GiveawayDetailDialog";
 import { Wordmark } from "@/components/Wordmark";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,9 +15,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { CalendarAgenda } from "@/components/CalendarAgenda";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { GiveawaySearch } from "@/components/GiveawaySearch";
 import { ValueExplainer } from "@/components/ValueExplainer";
 import { downloadCsv, toCsv } from "@/lib/library-csv";
-import { useListNavigation, useNow, useSearchHotkey } from "@/hooks/use-now";
+import { useListNavigation, useNow } from "@/hooks/use-now";
 import {
   DEFAULT_FILTERS,
   formatFreshness,
@@ -44,10 +44,8 @@ import {
   Inbox,
   LayoutGrid,
   LogOut,
-  Search,
   SlidersHorizontal,
   Sparkles,
-  X,
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
@@ -78,9 +76,15 @@ export default function Dashboard() {
   const { giveaways, total, stale, fetchedAt, trendingIds, isLoading, error } =
     useGiveaways(filters, page, PAGE_SIZE, refreshToken);
 
-  const searchRef = useSearchHotkey<HTMLInputElement>();
   const now = useNow();
   const { activeIndex, itemRefs } = useListNavigation(giveaways.length);
+
+  // One handler for both the header and toolbar fields, and it always resets
+  // to the first page so a filter change can't strand you on an empty page 3.
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
 
   // Always subscribed so save state stays live on the grid without refetching.
   const savedIds = useQuery(api.library.savedIds) ?? NO_IDS;
@@ -187,34 +191,11 @@ export default function Dashboard() {
           </Link>
 
           <div className="relative ml-auto hidden w-full max-w-sm md:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              ref={searchRef}
+            <GiveawaySearch
               value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
+              onChange={handleSearchChange}
               placeholder="Search giveaways"
-              aria-label="Search giveaways"
-              className="h-9 bg-secondary/60 pl-9 pr-14 text-sm"
             />
-            <kbd className="pointer-events-none absolute right-2.5 inline-flex select-none items-center rounded border border-border/70 bg-card/70 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              ⌘K
-            </kbd>
-            {search && (
-              <button
-                type="button"
-                aria-label="Clear search"
-                onClick={() => {
-                  setSearch("");
-                  setPage(1);
-                }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <X className="size-3.5" />
-              </button>
-            )}
           </div>
 
           <div className="ml-auto flex items-center gap-2 md:ml-0">
@@ -282,20 +263,11 @@ export default function Dashboard() {
         {/* ---------------------------------------------------------- Filters */}
         {!showLibrary && (
           <div className="mt-8 space-y-4">
-            <div className="relative md:hidden">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                ref={searchRef}
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.target.value);
-                  setPage(1);
-                }}
-                placeholder="Search giveaways"
-                aria-label="Search giveaways"
-                className="h-10 bg-secondary/60 pl-9"
-              />
-            </div>
+            <GiveawaySearch
+              value={search}
+              onChange={handleSearchChange}
+              className="md:hidden"
+            />
 
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
               <div className="flex flex-wrap items-center gap-1.5">
