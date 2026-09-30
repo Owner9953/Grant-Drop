@@ -15,12 +15,15 @@ import {
   formatCountdown,
   formatWorth,
   type Giveaway,
+  isFragment,
   msRemaining,
+  stripStepNumber,
   tidyDescription,
   URGENCY_TEXT,
   urgencyLevel,
 } from "@/lib/giveaways";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 import {
   Bookmark,
   Check,
@@ -54,12 +57,15 @@ export function GiveawayDetailDialog({
 
   const steps = giveaway.instructions
     .split(/\r?\n/)
-    .map((line) => line.trim())
+    .map((line) => stripStepNumber(line.trim()))
     .filter(Boolean);
   const urgency = urgencyLevel(giveaway.endsAt, now);
   const remaining = msRemaining(giveaway.endsAt, now);
   const expired = remaining !== null && remaining <= 0;
   const description = tidyDescription(giveaway.description);
+  // A truncated stub ("Download Express No. 6 for") reads as a broken page, so
+  // it is dropped rather than shown.
+  const summary = isFragment(description) ? "" : description;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,12 +99,15 @@ export function GiveawayDetailDialog({
               )}
               {/* Repeated, not moved: "DRM-free" is the single most
                   trust-relevant fact about an offer, so it earns a second
-                  position next to the art. */}
+                  position next to the art. Uses the opaque accent pair rather
+                  than a translucent primary tint, which would put primary text
+                  on a near-primary background wherever `color-mix` is absent. */}
               {giveaway.drmFree && (
                 <Badge
                   variant="secondary"
-                  className="border-primary/30 bg-primary/10 text-xs text-primary"
+                  className="gap-1 border-primary/40 bg-accent text-xs text-accent-foreground"
                 >
+                  <ShieldCheck className="size-3" />
                   DRM-free
                 </Badge>
               )}
@@ -113,34 +122,34 @@ export function GiveawayDetailDialog({
 
           <DeadlineBanner endsAt={giveaway.endsAt} expired={expired} urgency={urgency} />
 
-          <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70">
-            <div className="bg-card px-3 py-3.5 sm:px-4">
-              <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+          <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-border/60 bg-border/60">
+            <div className="bg-card/80 px-3 py-3.5 sm:px-4">
+              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
                 Worth
               </dt>
               <dd className="hud-num mt-1 text-base font-semibold text-primary">
                 {formatWorth(giveaway.worth, giveaway.worthAmount)}
               </dd>
             </div>
-            <div className="bg-card px-3 py-3.5 sm:px-4">
-              <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+            <div className="bg-card/80 px-3 py-3.5 sm:px-4">
+              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
                 Deadline
               </dt>
+              {/* Same size as its neighbours: "5d 21h left" was set a step
+                  smaller than "$4.99", so the three numbers didn't line up. */}
               <dd
                 className={cn(
-                  // An expired offer used to render in the same muted grey as
-                  // "no deadline", which read as "no hurry" rather than "gone".
-                  "hud-num mt-1 text-sm font-semibold",
+                  "hud-num mt-1 text-base font-semibold",
                   expired ? "text-destructive" : URGENCY_TEXT[urgency],
                 )}
               >
                 {expired ? "Expired" : formatCountdown(giveaway.endsAt, now)}
               </dd>
             </div>
-            <div className="bg-card px-3 py-3.5 sm:px-4">
+            <div className="bg-card/80 px-3 py-3.5 sm:px-4">
               {/* The feed reports a `users` counter, not verified redemptions,
                   so it is labelled for what it is. */}
-              <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
+              <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
                 Users
               </dt>
               <dd className="hud-num mt-1 text-base font-semibold">
@@ -149,35 +158,33 @@ export function GiveawayDetailDialog({
             </div>
           </dl>
 
-          {description && (
-            <p className="text-sm leading-6 text-muted-foreground">
-              {description}
-            </p>
+          {summary && (
+            <p className="text-sm leading-6 text-muted-foreground">{summary}</p>
           )}
 
           {steps.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold tracking-tight">How to claim</h3>
+            <section>
+              <SectionLabel>How to claim</SectionLabel>
               <ol className="mt-3 space-y-2.5">
                 {steps.map((step, index) => (
                   <li
                     key={index}
                     className="flex gap-3 text-sm leading-6 text-muted-foreground"
                   >
-                    <span className="mt-1 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-semibold tabular-nums text-foreground">
+                    <span className="hud-num mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-semibold text-accent-foreground">
                       {index + 1}
                     </span>
-                    {step}
+                    <span className="min-w-0">{step}</span>
                   </li>
                 ))}
               </ol>
-            </div>
+            </section>
           )}
 
           {giveaway.platforms.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold tracking-tight">Available on</h3>
-              <ul className="mt-2.5 flex flex-wrap gap-1.5">
+            <section>
+              <SectionLabel>Available on</SectionLabel>
+              <ul className="mt-3 flex flex-wrap gap-1.5">
                 {giveaway.platforms.map((platform) => (
                   <li
                     key={platform}
@@ -187,7 +194,7 @@ export function GiveawayDetailDialog({
                   </li>
                 ))}
               </ul>
-            </div>
+            </section>
           )}
 
           {giveaway.endsAt !== null && (
@@ -262,6 +269,18 @@ export function GiveawayDetailDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Shared heading for the secondary blocks. One treatment, so "How to claim" and
+ * "Available on" read as siblings rather than as two unrelated labels.
+ */
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <h3 className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+      {children}
+    </h3>
   );
 }
 

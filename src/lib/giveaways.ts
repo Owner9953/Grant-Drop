@@ -198,3 +198,25 @@ export function tidyDescription(description: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+/**
+ * True when a description is a cut-off fragment rather than a sentence.
+ *
+ * The feed regularly truncates these mid-clause — "Download Express No. 6 for"
+ * — and rendering the stub reads like a broken page rather than missing data.
+ */
+export function isFragment(text: string): boolean {
+  if (text.length < 24) return true;
+  const dangling = /\b(for|the|a|an|on|in|to|at|of|with|from|and|or|by)$/i;
+  return dangling.test(text);
+}
+
+/**
+ * Removes the numbering the feed already bakes into `instructions`.
+ *
+ * The step list renders its own numbered marker, so leaving the upstream
+ * "1." in place doubles it: "1. 1. Click the Get Giveaway button".
+ */
+export function stripStepNumber(step: string): string {
+  return step.replace(/^\s*(?:step\s*)?\d+[.):-]?\s*/i, "").trim() || step.trim();
+}
