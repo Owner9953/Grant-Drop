@@ -41,6 +41,8 @@ const schema = defineSchema(
       store: v.string(),
       worth: v.string(),
       thumbnail: v.string(),
+      // The 460px art alongside the 300px thumb, so library cards stay sharp.
+      image: v.optional(v.string()),
       url: v.string(),
       endsAt: v.optional(v.number()),
       savedAt: v.number(),

@@ -1,3 +1,4 @@
+import { ArtScrim, GiveawayArt } from "@/components/GiveawayArt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLinkButton } from "@/components/ExternalLinkButton";
@@ -52,16 +53,14 @@ export function GiveawayDetailDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[92vh] gap-0 overflow-y-auto p-0 sm:max-w-2xl">
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-          <img
-            src={giveaway.image || giveaway.thumbnail}
-            alt=""
-            className="size-full object-cover"
+        <div className="relative">
+          <GiveawayArt
+            image={giveaway.image}
+            thumbnail={giveaway.thumbnail}
+            alt={giveaway.name}
+            aspect="aspect-[2/1]"
           />
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-black/40"
-          />
+          <ArtScrim />
         </div>
 
         <div className="space-y-6 p-6">

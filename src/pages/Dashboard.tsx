@@ -126,6 +126,7 @@ export default function Dashboard() {
         store: giveaway.store,
         worth: giveaway.worth,
         thumbnail: giveaway.thumbnail,
+        image: giveaway.image,
         url: giveaway.url,
         endsAt: giveaway.endsAt ?? undefined,
       });
@@ -648,7 +649,7 @@ function LibraryGrid({
             worth: item.worth,
             worthAmount: Number.parseFloat(item.worth.replace(/[^0-9.]/g, "")) || 0,
             thumbnail: item.thumbnail,
-            image: item.thumbnail,
+            image: item.image ?? item.thumbnail,
             description: "",
             instructions: "",
             url: item.url,

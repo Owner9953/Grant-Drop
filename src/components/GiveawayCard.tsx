@@ -1,3 +1,4 @@
+import { ArtScrim, GiveawayArt } from "@/components/GiveawayArt";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLinkButton } from "@/components/ExternalLinkButton";
@@ -93,19 +94,15 @@ export function GiveawayCard({
         className,
       )}
     >
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted">
-        <img
-          src={giveaway.thumbnail}
+      <div className="relative">
+        <GiveawayArt
+          image={giveaway.image}
+          thumbnail={giveaway.thumbnail}
           alt=""
-          loading="lazy"
-          className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+          aspect="aspect-[16/9]"
+          imageClassName="transition-transform duration-500 group-hover:scale-[1.06]"
         />
-        {/* Scrim: keeps the badges legible over any artwork and blends the image
-            into the card body instead of ending on a hard edge. */}
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-card via-card/10 to-black/35"
-        />
+        <ArtScrim />
         <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <Badge className="border border-white/10 bg-black/55 text-[11px] font-medium tracking-tight text-white backdrop-blur-md">
@@ -260,7 +257,7 @@ export function GiveawayCard({
 export function GiveawayCardSkeleton() {
   return (
     <div className="surface-card overflow-hidden">
-      <div className="aspect-[16/10] w-full animate-pulse bg-muted" />
+      <div className="aspect-[16/9] w-full animate-pulse bg-muted" />
       <div className="space-y-3 p-4">
         <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
         <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />

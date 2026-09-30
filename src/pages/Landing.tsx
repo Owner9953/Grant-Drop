@@ -146,6 +146,7 @@ export default function Landing() {
         store: giveaway.store,
         worth: giveaway.worth,
         thumbnail: giveaway.thumbnail,
+        image: giveaway.image,
         url: giveaway.url,
         endsAt: giveaway.endsAt ?? undefined,
       });
