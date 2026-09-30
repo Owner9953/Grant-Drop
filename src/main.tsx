@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { VlyToolbar } from "../vly-toolbar-readonly.tsx";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
-import React, { StrictMode, useEffect, lazy, Suspense } from "react";
+import React, { StrictMode, useEffect, useRef, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router";
 import "./index.css";
@@ -109,6 +109,33 @@ function RouteSyncer() {
   return null;
 }
 
+/**
+ * Returns to the top of the page when the route genuinely changes.
+ *
+ * `index.css` sets `scroll-behavior: smooth` for in-page anchors, so this asks
+ * for an instant jump explicitly — a route change should cut, not glide past
+ * the whole page on the way to the top.
+ *
+ * Scoped to `pathname` on purpose. A hash or query change on the same route
+ * (the footer's `#live` links, the platform strip jumping to the board) has to
+ * keep the current scroll position, or the anchor it just jumped to gets undone.
+ *
+ * This is a plain `<BrowserRouter>` with `<Routes>`, not a data router, so
+ * React Router's own `ScrollRestoration` does not apply here.
+ */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  const previousPathname = useRef(pathname);
+
+  useEffect(() => {
+    if (previousPathname.current === pathname) return;
+    previousPathname.current = pathname;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname]);
+
+  return null;
+}
+
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -121,6 +148,7 @@ createRoot(document.getElementById("root")!).render(
         <ThemeProvider>
           <BrowserRouter>
             <RouteSyncer />
+            <ScrollToTop />
             <Suspense fallback={<RouteLoading />}>
               <Routes>
                 <Route path="/" element={<Landing />} />
