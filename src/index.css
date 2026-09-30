@@ -262,8 +262,37 @@
       0 0 0 1px color-mix(in oklch, var(--primary) 45%, transparent),
       0 12px 44px -10px color-mix(in oklch, var(--primary) 60%, transparent);
   }
-  .text-glow {
-    text-shadow: 0 0 24px color-mix(in oklch, var(--primary) 45%, transparent);
+  /* Hero headline accent.
+     This replaces a `text-shadow` glow, which at display sizes flooded the
+     letter counters and turned the second line into an unreadable blob. A
+     gradient keeps the same jade-to-cyan sweep while every glyph stays solid
+     and legible. Light and dark get separate ramps so contrast holds both ways. */
+  .text-sweep {
+    background-image: linear-gradient(
+      180deg,
+      oklch(0.62 0.17 168) 0%,
+      oklch(0.54 0.14 186) 55%,
+      oklch(0.45 0.12 202) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .dark .text-sweep {
+    background-image: linear-gradient(
+      180deg,
+      oklch(0.93 0.14 168) 0%,
+      var(--primary) 55%,
+      oklch(0.74 0.13 202) 100%
+    );
+  }
+  /* Sits behind the gradient so the clipped text still has a readable floor if
+     the background-clip property is unsupported. */
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+    .text-sweep {
+      background-image: none;
+      color: var(--primary);
+    }
   }
 
   /* Eyebrow label above section headings. */

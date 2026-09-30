@@ -227,15 +227,15 @@ export default function Landing() {
           >
             <Badge
               variant="secondary"
-              className="mb-6 gap-1.5 border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+              className="mb-6 gap-1.5 border-primary/40 bg-accent px-3 py-1 text-xs font-medium text-accent-foreground"
             >
               <Sparkles className="size-3.5" />
-              Live feed · refreshed continuously
+              Live feed · checked every 5 minutes
             </Badge>
             <h1 className="text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.035em] sm:text-6xl">
               Every free game,
               <br />
-              <span className="text-primary text-glow">every platform.</span>
+              <span className="text-sweep">every platform.</span>
             </h1>
             <p className="text-balance mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground">
               Grantdrop pulls active giveaways from every major storefront — PC,
@@ -269,7 +269,7 @@ export default function Landing() {
                   value: total > 0 ? String(total) : "—",
                   hint:
                     platform === DEFAULT_FILTERS.platform
-                      ? "across 10 storefronts"
+                      ? "across every storefront"
                       : "matching your filter",
                   Icon: Zap,
                   live: true,
