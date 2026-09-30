@@ -15,6 +15,31 @@
     content="Grantdrop — every free game giveaway on one board, across PC, console and mobile. Filter by platform, sort by value, save offers to your library, and claim before the timer runs out."
   />
   <title>Grantdrop — Free Game Giveaways Across Every Platform</title>
+  <script>
+    // Paint the stored theme before React mounts. Grantdrop is dark-first, so
+    // without this the page briefly renders the light palette on every cold
+    // load. Mirrors next-themes' storage key and value set exactly, so the
+    // provider takes over without a second theme change.
+    (function () {
+      try {
+        var stored = localStorage.getItem("theme");
+        var theme =
+          stored === "light" || stored === "dark"
+            ? stored
+            : stored === "system"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : "dark";
+        var root = document.documentElement;
+        root.classList.remove("light", "dark");
+        root.classList.add(theme);
+        root.style.colorScheme = theme;
+      } catch (err) {
+        document.documentElement.classList.add("dark");
+      }
+    })();
+  </script>
 </head>
 
 

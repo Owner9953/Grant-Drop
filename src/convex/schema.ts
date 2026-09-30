@@ -53,22 +53,19 @@ const schema = defineSchema(
       .index("by_user", ["userId"])
       .index("by_user_and_giveaway", ["userId", "giveawayId"]),
 
-    // Opt-in notification settings. One row per user; the row's absence means
-    // "no subscriptions", which is the safe default.
+    // Browser notification settings. One row per user; the row's absence means
+    // "not opted in", which is the safe default.
     notificationPrefs: defineTable({
       userId: v.id("users"),
-      email: v.optional(v.string()),
-      digest: v.optional(v.union(v.literal("off"), v.literal("daily"), v.literal("weekly"))),
+      /** Opt-in to OS-level notifications via the browser Notification API. */
+      browserEnabled: v.optional(v.boolean()),
       /** Skip offers priced below this. */
       minWorth: v.optional(v.number()),
-      /** Restrict the digest to these platform group values. */
+      /** Restrict alerts to these platform group values. Empty means all. */
       platforms: v.optional(v.array(v.string())),
-      /** Last successful digest, so runs stay idempotent. */
-      lastSentAt: v.optional(v.number()),
-      lastItemId: v.optional(v.number()),
-    })
-      .index("by_user", ["userId"])
-      .index("by_digest", ["digest"]),
+      /** Watermark: newest `publishedAt` the user has already been shown. */
+      lastSeenAt: v.optional(v.number()),
+    }).index("by_user", ["userId"]),
   },
   {
     schemaValidation: false,
