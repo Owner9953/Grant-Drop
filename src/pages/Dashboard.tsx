@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CalendarAgenda } from "@/components/CalendarAgenda";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { NotificationButton } from "@/components/NotificationSettings";
 import { StatTiles } from "@/components/StatTiles";
 import { GiveawaySearch } from "@/components/GiveawaySearch";
 import { useFiltersInUrl } from "@/hooks/use-filter-url";
@@ -203,6 +204,7 @@ export default function Dashboard() {
 
           <div className="ml-auto flex items-center gap-2 md:ml-0">
             <InstallAppButton className="hidden sm:inline-flex" />
+            <NotificationButton />
             <ThemeToggle />
             <span className="hidden text-sm text-muted-foreground lg:inline">
               {user?.name || user?.email || "Signed in"}
