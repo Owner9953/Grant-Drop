@@ -38,6 +38,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Compass,
+  Flame,
   Gift,
   LayoutGrid,
   ShieldCheck,
@@ -255,20 +256,68 @@ export default function Landing() {
 
             <dl className="mx-auto mt-14 grid max-w-2xl grid-cols-3 gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70">
               {[
-                { label: "Giveaways indexed", value: "1,900+" },
+                {
+                  // Counted from the feed, never asserted: the board's own
+                  // total is the only number here that can go stale. Tapping a
+                  // platform in the strip below re-scopes it, and the label
+                  // follows so the figure is never ambiguous.
+                  label:
+                    platform === DEFAULT_FILTERS.platform
+                      ? "Live right now"
+                      : `Live on ${PLATFORM_GROUPS.find((item) => item.value === platform)?.label ?? "all"}`,
+                  value: total > 0 ? String(total) : "—",
+                  hint:
+                    platform === DEFAULT_FILTERS.platform
+                      ? "across 10 storefronts"
+                      : "matching your filter",
+                  Icon: Zap,
+                  live: true,
+                },
                 {
                   label: "Worth of top deals",
-                  value: totalWorth > 0 ? `$${Math.round(totalWorth)}` : "$0",
+                  value: totalWorth > 0 ? `$${Math.round(totalWorth)}` : "—",
+                  hint: "the 8 priciest",
+                  Icon: Flame,
+                  tone: true,
                 },
-                { label: "Cost to join", value: "$0" },
+                {
+                  label: "Cost to join",
+                  value: "$0",
+                  hint: "no card, no trial",
+                  Icon: ShieldCheck,
+                },
               ].map((stat) => (
-                <div key={stat.label} className="bg-card px-4 py-5">
-                  <dt className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-                    {stat.label}
+                <div
+                  key={stat.label}
+                  className="flex flex-col bg-card/80 px-3 py-5 backdrop-blur-sm transition-colors hover:bg-secondary/50 sm:px-5"
+                >
+                  <dt className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                    {stat.live ? (
+                      <span className="relative flex size-3.5 shrink-0 items-center justify-center">
+                        <span className="absolute size-2 animate-ping rounded-full bg-primary/70" />
+                        <span className="size-1.5 rounded-full bg-primary" />
+                      </span>
+                    ) : (
+                      <stat.Icon
+                        className={cn(
+                          "size-3.5 shrink-0",
+                          stat.tone && "text-primary",
+                        )}
+                      />
+                    )}
+                    <span className="truncate">{stat.label}</span>
                   </dt>
-                  <dd className="mt-1.5 text-xl font-semibold tabular-nums tracking-tight">
+                  <dd
+                    className={cn(
+                      "hud-num mt-1.5 text-2xl font-semibold tracking-tight",
+                      stat.tone && "text-primary",
+                    )}
+                  >
                     {stat.value}
                   </dd>
+                  <p className="mt-1 hidden text-[11px] leading-4 text-muted-foreground/80 sm:block">
+                    {stat.hint}
+                  </p>
                 </div>
               ))}
             </dl>
