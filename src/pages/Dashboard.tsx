@@ -186,11 +186,11 @@ export default function Dashboard() {
   ).length;
 
   return (
-    <div className="game-backdrop min-h-screen bg-background text-foreground">
+    <div className="game-backdrop min-h-dvh bg-background text-foreground">
       {/* ------------------------------------------------------------- Header */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-4 px-5">
-          <Link to="/" aria-label="Grantdrop home">
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 pt-safe backdrop-blur-xl">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-3 px-4 sm:gap-4 sm:px-5">
+          <Link to="/" aria-label="Grantdrop home" className="min-w-0">
             <Wordmark />
           </Link>
 
@@ -202,11 +202,11 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="ml-auto flex items-center gap-2 md:ml-0">
+          <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
             <InstallAppButton className="hidden sm:inline-flex" />
             <NotificationButton />
             <ThemeToggle />
-            <span className="hidden text-sm text-muted-foreground lg:inline">
+            <span className="hidden max-w-[12rem] truncate text-sm text-muted-foreground lg:inline">
               {user?.name || user?.email || "Signed in"}
             </span>
             <Button
@@ -215,6 +215,7 @@ export default function Dashboard() {
               size="sm"
               className="gap-1.5"
               onClick={handleSignOut}
+              aria-label="Sign out"
             >
               <LogOut className="size-3.5" />
               <span className="hidden sm:inline">Sign out</span>
@@ -223,7 +224,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-5 pb-24 pt-8">
+      <main className="mx-auto w-full max-w-7xl px-4 pb-24 pt-6 sm:px-5 sm:pt-8">
         {/* ---------------------------------------------------------- Heading */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -316,7 +317,7 @@ export default function Dashboard() {
                       setPage(1);
                     }}
                     aria-pressed={type === item.value}
-                    className={`h-8 rounded-full border px-3.5 text-[13px] font-medium transition-colors ${
+                    className={`h-9 rounded-full border px-3.5 text-[13px] font-medium transition-colors xs:h-8 ${
                       type === item.value
                         ? "border-transparent bg-foreground text-background"
                         : "border-border/80 bg-card text-muted-foreground hover:border-border hover:text-foreground"
@@ -337,7 +338,7 @@ export default function Dashboard() {
                 >
                   <SelectTrigger
                     aria-label="Filter by store"
-                    className="h-9 w-[168px] rounded-lg bg-card text-sm"
+                    className="h-9 w-full min-w-[8.5rem] flex-1 rounded-lg bg-card text-sm xs:w-[168px] xs:flex-none"
                   >
                     <SlidersHorizontal className="size-3.5 text-muted-foreground" />
                     <SelectValue />
@@ -360,7 +361,7 @@ export default function Dashboard() {
                 >
                   <SelectTrigger
                     aria-label="Sort giveaways"
-                    className="h-9 w-[168px] rounded-lg bg-card text-sm"
+                    className="h-9 w-full min-w-[8.5rem] flex-1 rounded-lg bg-card text-sm xs:w-[168px] xs:flex-none"
                   >
                     <SelectValue />
                   </SelectTrigger>
@@ -411,7 +412,7 @@ export default function Dashboard() {
                       )}
                     >
                       <option.icon className="size-3.5" />
-                      <span className="hidden sm:inline">{option.label}</span>
+                      <span className="hidden xs:inline">{option.label}</span>
                     </button>
                   ))}
                 </div>
@@ -422,20 +423,20 @@ export default function Dashboard() {
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5">
               {(["saved", "claimed"] as const).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setLibraryFilter(key)}
-                  aria-pressed={libraryFilter === key}
-                  className={cn(
-                    "h-8 rounded-full border px-3.5 text-[13px] font-medium capitalize transition-colors",
-                    libraryFilter === key
-                      ? "border-transparent bg-foreground text-background"
-                      : "border-border/80 bg-card text-muted-foreground hover:border-border hover:text-foreground",
-                  )}
-                >
-                  {key}
-                </button>
+              <button
+                key={key}
+                type="button"
+                onClick={() => setLibraryFilter(key)}
+                aria-pressed={libraryFilter === key}
+                className={cn(
+                  "h-9 rounded-full border px-3.5 text-[13px] font-medium capitalize transition-colors xs:h-8",
+                  libraryFilter === key
+                    ? "border-transparent bg-foreground text-background"
+                    : "border-border/80 bg-card text-muted-foreground hover:border-border hover:text-foreground",
+                )}
+              >
+                {key}
+              </button>
               ))}
             </div>
             <Button
@@ -548,11 +549,12 @@ export default function Dashboard() {
                   </span>
                 )}
               </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex w-full items-center gap-2 xs:w-auto">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="flex-1 xs:flex-none"
                       disabled={page === 1 || isLoading}
                       onClick={() => setPage((current) => Math.max(1, current - 1))}
                     >
@@ -563,6 +565,7 @@ export default function Dashboard() {
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="flex-1 xs:flex-none"
                       disabled={isLoading || page * PAGE_SIZE >= total}
                       onClick={() => setPage((current) => current + 1)}
                     >

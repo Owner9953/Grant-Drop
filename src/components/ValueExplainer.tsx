@@ -27,7 +27,7 @@ export function ValueExplainer({ className }: { className?: string }) {
           <Info className="size-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-80 text-sm">
+      <PopoverContent align="start" className="w-[calc(100vw-2rem)] max-w-80 text-sm">
         <p className="font-semibold tracking-tight">How "Most valuable" is ranked</p>
         <p className="mt-2 leading-6 text-muted-foreground">
           Every offer carries a retail price from the store listing it. Sorting

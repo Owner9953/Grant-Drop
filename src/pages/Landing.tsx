@@ -170,11 +170,11 @@ export default function Landing() {
   };
 
   return (
-    <div className="game-backdrop min-h-screen bg-background text-foreground">
+    <div className="game-backdrop min-h-dvh bg-background text-foreground">
       {/* ---------------------------------------------------------------- Nav */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5">
-          <Link to="/" aria-label="Grantdrop home">
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 pt-safe backdrop-blur-xl">
+        <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-5">
+          <Link to="/" aria-label="Grantdrop home" className="min-w-0">
             <Wordmark />
           </Link>
           <div className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
@@ -188,13 +188,13 @@ export default function Landing() {
               How it works
             </a>
           </div>
-          <div className="flex items-center gap-2">
-            <InstallAppButton />
+          <div className="flex shrink-0 items-center gap-2">
+            <InstallAppButton className="hidden sm:inline-flex" />
             <ThemeToggle />
             {isAuthenticated ? (
               <Button asChild size="sm" className="gap-1.5">
                 <Link to="/dashboard">
-                  Open hub
+                  <span className="hidden xs:inline">Open </span>hub
                   <ArrowRight className="size-3.5" />
                 </Link>
               </Button>
@@ -205,7 +205,8 @@ export default function Landing() {
                 </Button>
                 <Button asChild size="sm" className="gap-1.5">
                   <Link to="/auth?returnTo=/dashboard">
-                    Browse freebies
+                    <span className="hidden xs:inline">Browse freebies</span>
+                    <span className="xs:hidden">Browse</span>
                     <ArrowRight className="size-3.5" />
                   </Link>
                 </Button>
@@ -217,7 +218,7 @@ export default function Landing() {
 
       {/* --------------------------------------------------------------- Hero */}
       <section className="relative overflow-hidden border-b border-border/60">
-        <div className="relative mx-auto w-full max-w-6xl px-5 pb-20 pt-20 sm:pt-28">
+        <div className="relative mx-auto w-full max-w-6xl px-4 pb-14 pt-14 sm:px-5 sm:pb-20 sm:pt-28">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -291,25 +292,25 @@ export default function Landing() {
                   key={stat.label}
                   className="flex flex-col bg-card/80 px-3 py-5 backdrop-blur-sm transition-colors hover:bg-secondary/50 sm:px-5"
                 >
-                  <dt className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  <dt className="flex items-start gap-1.5 text-[10px] font-medium uppercase leading-[1.35] tracking-[0.06em] text-muted-foreground xs:text-[11px] xs:tracking-[0.08em]">
                     {stat.live ? (
-                      <span className="relative flex size-3.5 shrink-0 items-center justify-center">
+                      <span className="relative mt-0.5 flex size-3.5 shrink-0 items-center justify-center">
                         <span className="absolute size-2 animate-ping rounded-full bg-primary/70" />
                         <span className="size-1.5 rounded-full bg-primary" />
                       </span>
                     ) : (
                       <stat.Icon
                         className={cn(
-                          "size-3.5 shrink-0",
+                          "mt-px size-3.5 shrink-0",
                           stat.tone && "text-primary",
                         )}
                       />
                     )}
-                    <span className="truncate">{stat.label}</span>
+                    <span>{stat.label}</span>
                   </dt>
                   <dd
                     className={cn(
-                      "hud-num mt-1.5 text-2xl font-semibold tracking-tight",
+                      "hud-num mt-1.5 text-xl font-semibold tracking-tight xs:text-2xl",
                       stat.tone && "text-primary",
                     )}
                   >
@@ -356,11 +357,11 @@ export default function Landing() {
                     }}
                     aria-pressed={isActive}
                     className={cn(
-                      "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium tracking-tight transition-all duration-200",
+                      "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-lg border px-3 py-2 text-[12px] font-medium tracking-tight transition-colors duration-200 xs:px-2.5 xs:py-1.5",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       isActive
                         ? "border-primary/50 bg-primary/15 text-primary"
-                        : "border-border/70 bg-card/60 text-muted-foreground hover:-translate-y-px hover:border-primary/40 hover:bg-card hover:text-foreground",
+                        : "border-border/70 bg-card/60 text-muted-foreground pointer-fine:hover:-translate-y-px pointer-fine:hover:border-primary/40 pointer-fine:hover:bg-card pointer-fine:hover:text-foreground",
                     )}
                   >
                     {Icon && <Icon className="size-3.5 shrink-0" />}
@@ -374,7 +375,7 @@ export default function Landing() {
       </section>
 
       {/* ------------------------------------------------------------- Offers */}
-      <section id="live" className="mx-auto w-full max-w-6xl scroll-mt-36 px-5 py-20">
+      <section id="live" className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-5 sm:py-20">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-xl">
             <p className="kicker">Live right now</p>
@@ -449,7 +450,7 @@ export default function Landing() {
           </Select>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {isLoading
             ? Array.from({ length: LIVE_PAGE_SIZE }).map((_, index) => (
                 <GiveawayCardSkeleton key={index} />
@@ -500,19 +501,20 @@ export default function Landing() {
         )}
 
         {giveaways.length > 0 && (
-          <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <span className="text-sm tabular-nums text-muted-foreground">
+          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <span className="text-center text-sm tabular-nums text-muted-foreground">
               Showing {(page - 1) * LIVE_PAGE_SIZE + 1}–
               {Math.min(page * LIVE_PAGE_SIZE, total)} of {total}
               {fetchedAt && (
                 <span className="ml-2">· Updated {formatFreshness(fetchedAt, now)}</span>
               )}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center gap-2 xs:w-auto">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
+                className="flex-1 xs:flex-none"
                 disabled={page === 1 || isLoading}
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
               >
@@ -523,6 +525,7 @@ export default function Landing() {
                 type="button"
                 variant="outline"
                 size="sm"
+                className="flex-1 xs:flex-none"
                 disabled={isLoading || page * LIVE_PAGE_SIZE >= total}
                 onClick={() => setPage((current) => current + 1)}
               >
@@ -545,8 +548,8 @@ export default function Landing() {
       </section>
 
       {/* ------------------------------------------------------------ Features */}
-      <section id="features" className="scroll-mt-20 border-y border-border/60 bg-secondary/40">
-        <div className="mx-auto w-full max-w-6xl px-5 py-20">
+      <section id="features" className="border-y border-border/60 bg-secondary/40">
+        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-5 sm:py-20">
           <div className="max-w-xl">
             <p className="kicker">Built for collectors</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
@@ -568,7 +571,7 @@ export default function Landing() {
       </section>
 
       {/* ---------------------------------------------------------- How it works */}
-      <section id="how" className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 py-20">
+      <section id="how" className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-5 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
           <div>
             <p className="kicker">How it works</p>
@@ -614,7 +617,7 @@ export default function Landing() {
 
       {/* ----------------------------------------------------------------- CTA */}
       <section className="border-t border-border/60 bg-foreground text-background">
-        <div className="mx-auto w-full max-w-6xl px-5 py-20">
+        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-5 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <div className="mx-auto mb-6 grid size-12 place-items-center rounded-xl bg-background/10">
               <LayoutGrid className="size-6" />
@@ -660,7 +663,7 @@ export default function Landing() {
 
       {/* -------------------------------------------------------------- Footer */}
       <footer className="border-t border-border/60 bg-background">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-5 py-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-8 pb-safe sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <Wordmark />
           <p className={cn("text-xs text-muted-foreground")}>
             Giveaway data provided by GamerPower. Always confirm eligibility on the

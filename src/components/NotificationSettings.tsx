@@ -125,8 +125,8 @@ function SettingsBody({
   };
 
   return (
-    <DialogContent className="max-h-[92vh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
-      <DialogHeader className="space-y-2 p-6 pb-4">
+    <DialogContent className="max-h-[92dvh] gap-0 overflow-y-auto p-0 sm:max-w-lg">
+      <DialogHeader className="space-y-2 p-5 pb-4 sm:p-6 sm:pb-4">
         <DialogTitle className="flex items-center gap-2 tracking-tight">
           <Bell className="size-5 text-primary" />
           New giveaway alerts
@@ -138,7 +138,7 @@ function SettingsBody({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="space-y-6 px-6 pb-6">
+      <div className="space-y-6 px-4 pb-6 sm:px-6">
         {/* Master switch */}
         <div className="flex items-start justify-between gap-4 rounded-lg border border-border/80 bg-secondary/40 px-4 py-3.5">
           <div>
@@ -231,7 +231,7 @@ function SettingsBody({
         </div>
       </div>
 
-      <DialogFooter className="gap-2 border-t border-border/60 px-6 py-4">
+      <DialogFooter className="gap-2 border-t border-border/60 px-4 py-4 sm:px-6">
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
@@ -297,7 +297,7 @@ export function NotificationButton() {
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-[22rem] p-0">
+        <PopoverContent align="end" className="w-[calc(100vw-2rem)] max-w-[22rem] p-0">
           <AlertList alerts={alerts} onOpenSettings={openSettings} />
         </PopoverContent>
       </Popover>

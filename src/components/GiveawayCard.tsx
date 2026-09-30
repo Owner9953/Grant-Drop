@@ -86,9 +86,14 @@ export function GiveawayCard({
           : undefined
       }
       className={cn(
-        "surface-card group relative flex flex-col overflow-hidden transition-all duration-300",
-        "hover:-translate-y-1 hover:border-primary/40 hover:shadow-2xl focus-within:-translate-y-1",
-        "hover:[box-shadow:0_0_0_1px_color-mix(in_oklch,var(--primary)_45%,transparent),0_18px_50px_-14px_color-mix(in_oklch,var(--primary)_55%,transparent)]",
+        "surface-card group relative flex flex-col overflow-hidden",
+        "transition-[transform,border-color,box-shadow] duration-300",
+        // Lift on hover only where a fine pointer exists: on touch it would
+        // stick or fire on tap, which reads as a rendering glitch.
+        "pointer-fine:hover:-translate-y-1 pointer-fine:hover:border-primary/40 pointer-fine:hover:shadow-2xl",
+        "pointer-fine:hover:[box-shadow:0_0_0_1px_color-mix(in_oklch,var(--primary)_45%,transparent),0_18px_50px_-14px_color-mix(in_oklch,var(--primary)_55%,transparent)]",
+        "focus-within:-translate-y-1 active:scale-[0.995]",
+        "motion-reduce:transform-none motion-reduce:transition-none",
         onItemRef &&
           "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
@@ -99,8 +104,7 @@ export function GiveawayCard({
           image={giveaway.image}
           thumbnail={giveaway.thumbnail}
           alt=""
-          aspect="aspect-[16/9]"
-          imageClassName="transition-transform duration-500 group-hover:scale-[1.06]"
+          aspect="aspect-[16/9]"            imageClassName="transition-transform duration-500 pointer-fine:group-hover:scale-[1.06] motion-reduce:transition-none"
         />
         <ArtScrim />
         <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">

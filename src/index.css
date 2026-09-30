@@ -43,6 +43,13 @@
 }
 
 /* CHANGE VALUES FOR THEME */
+@theme {
+  /* A 400px breakpoint. Tailwind has no extra small screen by default, but
+     phone layouts here need one step between "barely fits" and `sm`, e.g.
+     shortening a nav CTA before the full label can fit. */
+  --breakpoint-xs: 25rem;
+}
+
 :root {
   --radius: 0.75rem;
 
@@ -131,9 +138,47 @@
     width: 0;
     height: 0;
   }
+  /* Smooth in-page navigation, with room for the two sticky bars (the 4rem
+     header and the platform strip) so an anchor or scrollIntoView never lands
+     underneath them. */
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 9.5rem;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    /* Kills the grey flash on tap without affecting :hover or :active. */
+    -webkit-tap-highlight-color: transparent;
+    /* No horizontal rubber-banding: nothing in this app scrolls sideways, so
+       letting the page overscroll just reveals a gap. */
+    overscroll-behavior-x: none;
+  }
+  /* Removes the ~300ms tap delay on touch devices while keeping pinch-zoom. */
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  label {
+    touch-action: manipulation;
+  }
+  /* Comfortable tap targets are handled per-component: a blanket min-height
+     here would silently inflate every compact chip, tab and select trigger. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
   /* Buttons rendered as links (Button asChild + <a>) must read as buttons:
      no browser-default link colour or underline. Tailwind's `underline`
@@ -150,6 +195,13 @@
 }
 
 @layer utilities {
+  /* Clears the iOS home indicator / Android gesture bar on bottom-anchored UI. */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
   /* Soft layered card treatment used across the marketing and app surfaces. */
   .surface-card {
     @apply rounded-xl border border-border/80 bg-card;

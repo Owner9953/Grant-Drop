@@ -52,7 +52,7 @@ export function GiveawayDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] gap-0 overflow-y-auto p-0 sm:max-w-2xl">
+      <DialogContent className="max-h-[92dvh] gap-0 overflow-y-auto p-0 sm:max-w-2xl">
         <div className="relative">
           <GiveawayArt
             image={giveaway.image}
@@ -63,7 +63,7 @@ export function GiveawayDetailDialog({
           <ArtScrim />
         </div>
 
-        <div className="space-y-6 p-6">
+        <div className="space-y-6 p-4 pb-safe sm:p-6">
           <DialogHeader className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary" className="border-border/70 text-xs">
@@ -92,7 +92,7 @@ export function GiveawayDetailDialog({
           </DialogHeader>
 
           <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70">
-            <div className="bg-card px-4 py-3.5">
+            <div className="bg-card px-3 py-3.5 sm:px-4">
               <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                 Worth
               </dt>
@@ -100,7 +100,7 @@ export function GiveawayDetailDialog({
                 {formatWorth(giveaway.worth, giveaway.worthAmount)}
               </dd>
             </div>
-            <div className="bg-card px-4 py-3.5">
+            <div className="bg-card px-3 py-3.5 sm:px-4">
               <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                 Deadline
               </dt>
@@ -113,7 +113,7 @@ export function GiveawayDetailDialog({
                 {formatCountdown(giveaway.endsAt, now)}
               </dd>
             </div>
-            <div className="bg-card px-4 py-3.5">
+            <div className="bg-card px-3 py-3.5 sm:px-4">
               <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                 Claimed by
               </dt>
@@ -153,7 +153,7 @@ export function GiveawayDetailDialog({
             <span>{giveaway.platforms.join(", ")}</span>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 pb-1 sm:flex-row">
             <ExternalLinkButton
               href={giveaway.url}
               className="glow-accent h-10 flex-1 gap-1.5"
