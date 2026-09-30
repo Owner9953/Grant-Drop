@@ -96,6 +96,13 @@ const STEPS = [
 /** Chips for the platform strip, keyed to the filter values on the live board. */
 const TICKER = PLATFORM_GROUPS.filter((item) => item.value !== "all");
 
+/**
+ * Copyright year, resolved when the module loads rather than typed in — so the
+ * footer rolls over on 1 January with no code change, and the intent is obvious
+ * to whoever reads it next.
+ */
+const COPYRIGHT_YEAR = new Date().getFullYear();
+
 /** DRM-free is our differentiator, so it gets its own icon in the strip. */
 const TICKER_ICON: Record<string, typeof ShieldCheck | null> = {
   "drm-free": ShieldCheck,
@@ -688,7 +695,7 @@ export default function Landing() {
             </nav>
           </div>
           <p className="mt-6 border-t border-border/60 pt-5 text-xs leading-5 text-muted-foreground">
-            &copy; {new Date().getFullYear()} Grantdrop. Giveaway data provided
+            &copy; {COPYRIGHT_YEAR} Grantdrop. Giveaway data provided
             by GamerPower — confirm eligibility on the store page before
             claiming. Not affiliated with any publisher.
           </p>
