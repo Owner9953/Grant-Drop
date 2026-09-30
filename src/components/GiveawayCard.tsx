@@ -51,11 +51,23 @@ export function GiveawayCard({
   const urgency = urgencyLevel(giveaway.endsAt, now);
   const isFresh = isFreshGiveaway(giveaway.publishedAt, now);
 
+  // Only one status badge fits comfortably beside the store badge, so they
+  // resolve in priority order rather than stacking three deep.
+  const status = isClaimed
+    ? { label: "Claimed", icon: Check, className: "bg-primary text-primary-foreground" }
+    : isFresh
+      ? { label: "Just in", icon: null, className: "bg-primary text-primary-foreground" }
+      : isTrending
+        ? { label: "Trending", icon: Flame, className: "bg-background/85 text-foreground" }
+        : null;
+
   return (
     <article
       ref={
         onItemRef && itemIndex !== undefined
-          ? (node) => onItemRef(itemIndex, node)
+          ? (node) => {
+              onItemRef(itemIndex, node);
+            }
           : undefined
       }
       tabIndex={isActiveItem ? 0 : -1}
@@ -91,24 +103,15 @@ export function GiveawayCard({
             <Badge className="border-0 bg-background/85 text-[11px] font-medium tracking-tight text-foreground backdrop-blur-sm">
               {giveaway.store}
             </Badge>
-            {isFresh && (
-              <Badge className="border-0 bg-primary text-[11px] font-semibold text-primary-foreground">
-                Just in
-              </Badge>
-            )}
-            {isTrending && !isFresh && (
+            {status && (
               <Badge
-                variant="secondary"
-                className="gap-1 border-0 bg-background/85 text-[11px] font-semibold text-foreground backdrop-blur-sm"
+                className={cn(
+                  "gap-1 text-[11px] font-semibold backdrop-blur-sm",
+                  status.className,
+                )}
               >
-                <Flame className="size-3 text-orange-500" />
-                Trending
-              </Badge>
-            )}
-            {isClaimed && (
-              <Badge className="gap-1 border-0 bg-primary text-[11px] font-semibold text-primary-foreground">
-                <Check className="size-3" />
-                Claimed
+                {status.icon && <status.icon className="size-3" />}
+                {status.label}
               </Badge>
             )}
           </div>
@@ -130,7 +133,7 @@ export function GiveawayCard({
             aria-pressed={Boolean(isSaved)}
             onClick={() => onToggleSave(giveaway)}
             className={cn(
-              "absolute bottom-3 right-3 inline-flex size-8 items-center justify-center rounded-full border backdrop-blur-sm transition-all",
+              "absolute bottom-3 right-3 inline-flex size-11 items-center justify-center rounded-full border backdrop-blur-sm transition-all",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               isSaved
                 ? "border-transparent bg-primary text-primary-foreground"
@@ -152,63 +155,63 @@ export function GiveawayCard({
           </p>
         </div>
 
-        <div className="mt-auto flex items-center justify-between gap-3 border-t border-border/60 pt-3">
-          <div className="flex min-w-0 items-center gap-3 text-[11px] tabular-nums text-muted-foreground">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 font-medium",
-                URGENCY_TEXT[urgency],
-              )}
-            >
-              <Timer className="size-3.5 shrink-0" />
-              <span className="truncate">{formatCountdown(giveaway.endsAt, now)}</span>
+        {/* Meta on its own line so the action row below always has room. */}
+        <div className="mt-auto flex items-center gap-3 border-t border-border/60 pt-3 text-[11px] tabular-nums text-muted-foreground">
+          <span
+            className={cn(
+              "inline-flex min-w-0 items-center gap-1 font-medium",
+              URGENCY_TEXT[urgency],
+            )}
+          >
+            <Timer className="size-3.5 shrink-0" />
+            <span className="truncate">{formatCountdown(giveaway.endsAt, now)}</span>
+          </span>
+          {giveaway.users > 0 && (
+            <span className="inline-flex shrink-0 items-center gap-1">
+              <Users className="size-3.5 shrink-0" />
+              {compactNumber(giveaway.users)}
             </span>
-            {giveaway.users > 0 && (
-              <span className="inline-flex items-center gap-1">
-                <Users className="size-3.5 shrink-0" />
-                {compactNumber(giveaway.users)}
-              </span>
-            )}
-          </div>
+          )}
+        </div>
 
-          <div className="flex shrink-0 items-center gap-1.5">
-            {onToggleClaimed && isSaved && (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className={cn(
-                  "h-8 gap-1 px-2 text-xs",
-                  isClaimed && "text-primary hover:text-primary",
-                )}
-                aria-pressed={Boolean(isClaimed)}
-                onClick={() => onToggleClaimed(giveaway)}
-              >
-                <Check className={cn("size-3", !isClaimed && "opacity-40")} />
-                {isClaimed ? "Claimed" : "Mark claimed"}
-              </Button>
-            )}
-            {onSelect && (
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                className="h-8 px-3 text-xs"
-                onClick={() => onSelect(giveaway)}
-              >
-                Details
-              </Button>
-            )}
-            <ExternalLinkButton
-              href={giveaway.url}
-              size="sm"
-              className="h-8 gap-1.5 px-3 text-xs"
-              aria-label={`Claim ${giveaway.name} on ${giveaway.store}`}
+        <div className="flex items-center gap-2">
+          {onToggleClaimed && isSaved && (
+            <Button
+              type="button"
+              variant="ghost"
+              className={cn(
+                "size-11 shrink-0 px-0",
+                isClaimed && "text-primary hover:text-primary",
+              )}
+              aria-label={
+                isClaimed
+                  ? `Unmark ${giveaway.name} as claimed`
+                  : `Mark ${giveaway.name} as claimed`
+              }
+              aria-pressed={Boolean(isClaimed)}
+              onClick={() => onToggleClaimed(giveaway)}
             >
-              {onSelect ? "Claim" : "Get it"}
-              <ExternalLink className="size-3" />
-            </ExternalLinkButton>
-          </div>
+              <Check className={cn("size-4", !isClaimed && "opacity-40")} />
+            </Button>
+          )}
+          {onSelect && (
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-11 flex-1 text-[13px]"
+              onClick={() => onSelect(giveaway)}
+            >
+              Details
+            </Button>
+          )}
+          <ExternalLinkButton
+            href={giveaway.url}
+            className="h-11 flex-1 gap-1.5 text-[13px]"
+            aria-label={`Claim ${giveaway.name} on ${giveaway.store}`}
+          >
+            {onSelect ? "Claim" : "Get it"}
+            <ExternalLink className="size-3.5" />
+          </ExternalLinkButton>
         </div>
       </div>
     </article>
@@ -223,7 +226,7 @@ export function GiveawayCardSkeleton() {
       <div className="space-y-3 p-4">
         <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
         <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
-        <div className="h-8 animate-pulse rounded bg-muted" />
+        <div className="h-11 animate-pulse rounded-lg bg-muted" />
       </div>
     </div>
   );
