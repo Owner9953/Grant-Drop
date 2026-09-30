@@ -471,6 +471,7 @@ export default function Dashboard() {
           )}
           {showLibrary ? (
             <LibraryGrid
+              saved={savedList}
               onSelect={setSelected}
               onToggleSave={handleToggleSave}
               onToggleClaimed={handleToggleClaimed}
@@ -597,18 +598,23 @@ export default function Dashboard() {
 
 /** The signed-in user's saved offers, split into still-hunting vs redeemed. */
 function LibraryGrid({
+  saved,
   onSelect,
   onToggleSave,
   onToggleClaimed,
   filter,
 }: {
+  /**
+   * Passed down rather than re-subscribed: the dashboard already holds this
+   * query for the stat tiles, and a second subscription on the same query
+   * doubles the payload for no benefit.
+   */
+  saved: ReturnType<typeof useQuery<typeof api.library.listSaved>>;
   onSelect: (giveaway: Giveaway) => void;
   onToggleSave: (giveaway: Giveaway) => void;
   onToggleClaimed: (giveaway: Giveaway) => void;
   filter: "saved" | "claimed";
 }) {
-  const saved = useQuery(api.library.listSaved);
-
   if (saved === undefined) {
     return (
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

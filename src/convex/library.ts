@@ -5,6 +5,9 @@
  * network round trip; the feed itself stays the source of truth for details.
  */
 
+/** How far ahead `expiringSaved` looks. 48h catches "grab it tonight". */
+const EXPIRY_WINDOW_MS = 48 * 3_600_000;
+
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
@@ -32,6 +35,47 @@ export const listSaved = query({
         endsAt: row.endsAt ?? null,
         savedAt: row.savedAt,
         claimedAt: row.claimedAt ?? null,
+      }));
+  },
+});
+
+/**
+ * Saved offers that lapse inside the next 48 hours, soonest first.
+ *
+ * The library's whole job is not missing a deadline, and the board only ever
+ * shows the offers you happen to be looking at — so a save that's quietly
+ * running out needs its own prompt.
+ */
+export const expiringSaved = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    const now = Date.now();
+    const deadline = now + EXPIRY_WINDOW_MS;
+    const rows = await ctx.db
+      .query("savedGiveaways")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    return rows
+      .filter(
+        (row) =>
+          // Already redeemed, or gone for good — nothing to chase.
+          row.claimedAt === undefined &&
+          row.endsAt !== undefined &&
+          row.endsAt > now &&
+          row.endsAt <= deadline,
+      )
+      .sort((a, b) => (a.endsAt ?? 0) - (b.endsAt ?? 0))
+      .map((row) => ({
+        giveawayId: row.giveawayId,
+        name: row.name,
+        store: row.store,
+        thumbnail: row.thumbnail,
+        url: row.url,
+        endsAt: row.endsAt ?? null,
       }));
   },
 });

@@ -1,19 +1,53 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+/** A minute is the finest unit any countdown here displays. */
+const TICK_MS = 30_000;
 
 /**
- * Re-renders on an interval so countdowns stay live without every card owning
- * a timer. Tick rate is coarse on purpose: a minute is the finest unit the
- * countdown displays, and hundreds of independent timers would be wasteful.
+ * One timer for the whole app.
+ *
+ * The clock used to be a `setInterval` per `useNow()` call, so a 12-card grid
+ * ran 12 timers and re-rendered 12 cards on every tick — and because each
+ * interval started at a different moment, the countdown meters drifted out of
+ * step with each other. A single shared ticker fixes both: one interval, one
+ * state update, every card reading the same timestamp.
+ *
+ * The interval only runs while something is actually subscribed, so an idle
+ * tab costs nothing.
  */
-export function useNow(intervalMs = 30_000): number {
-  const [now, setNow] = useState(() => Date.now());
+let now = Date.now();
+let timer: ReturnType<typeof setInterval> | null = null;
+const listeners = new Set<() => void>();
 
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), intervalMs);
-    return () => clearInterval(timer);
-  }, [intervalMs]);
+function tick() {
+  now = Date.now();
+  for (const listener of listeners) listener();
+}
 
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  if (timer === null) {
+    // Catch up immediately: a component that mounts between ticks would
+    // otherwise render a countdown derived from whenever the app loaded.
+    now = Date.now();
+    timer = setInterval(tick, TICK_MS);
+  }
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0 && timer !== null) {
+      clearInterval(timer);
+      timer = null;
+    }
+  };
+}
+
+function getSnapshot() {
   return now;
+}
+
+/** Subscribes to the app-wide clock. See the note above on why it's shared. */
+export function useNow(): number {
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {

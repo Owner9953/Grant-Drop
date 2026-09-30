@@ -15,12 +15,24 @@ const POLL_MS = 5 * 60 * 1000;
 export const OPEN_ALERTS_EVENT = "grantdrop:open-alerts";
 
 const NO_ITEMS: Giveaway[] = [];
+const NO_EXPIRING: ExpiringSave[] = [];
+
+export interface ExpiringSave {
+  giveawayId: number;
+  name: string;
+  store: string;
+  thumbnail: string;
+  url: string;
+  endsAt: number | null;
+}
 
 export interface GiveawayAlertFeed {
   /** Whether the user has opted in to in-app alerts. */
   enabled: boolean;
   /** New offers published since they last cleared the bell, newest first. */
   items: Giveaway[];
+  /** Saved offers that lapse within 48h, soonest first. Always fresh. */
+  expiring: ExpiringSave[];
   unreadCount: number;
   isChecking: boolean;
   /** Clears the badge and advances the server watermark. */
@@ -40,6 +52,9 @@ export function useGiveawayAlerts(): GiveawayAlertFeed {
   const prefs = useQuery(api.notifications.getPrefs);
   const findNew = useAction(api.notifications.newSinceLastVisit);
   const markSeen = useMutation(api.notifications.markSeen);
+  // Reactive: adding, claiming or removing a save updates this on its own, so
+  // the expiry list never needs a manual refresh alongside the poll.
+  const expiring = useQuery(api.library.expiringSaved) ?? NO_EXPIRING;
 
   const [items, setItems] = useState<Giveaway[]>(NO_ITEMS);
   const [isChecking, setIsChecking] = useState(false);
@@ -111,10 +126,33 @@ export function useGiveawayAlerts(): GiveawayAlertFeed {
     });
   }, [markSeen]);
 
+  if (!enabled) {
+    return {
+      enabled: false,
+      items: NO_ITEMS,
+      // Still surfaced with alerts off. Saving an offer is itself an opt-in, and
+      // quietly dropping a deadline the user explicitly asked to track would be
+      // the one failure this bell exists to prevent.
+      expiring,
+      unreadCount: expiring.length,
+      isChecking,
+      markAllRead,
+    };
+  }
+
+  // The badge counts what needs attention right now: unseen new drops plus
+  // anything saved that is about to lapse. Deduplicated on the GamerPower id,
+  // so a new drop that is also expiring from your library counts once.
+  const attention = new Set<number>([
+    ...items.map((item) => item.id),
+    ...expiring.map((save) => save.giveawayId),
+  ]);
+
   return {
     enabled,
-    items: enabled ? items : NO_ITEMS,
-    unreadCount: enabled ? items.length : 0,
+    items,
+    expiring,
+    unreadCount: attention.size,
     isChecking,
     markAllRead,
   };

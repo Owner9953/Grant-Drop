@@ -21,7 +21,7 @@ import {
   useGiveawayAlerts,
   type GiveawayAlertFeed,
 } from "@/hooks/use-giveaway-alerts";
-import { PLATFORM_GROUPS, type Giveaway } from "@/lib/giveaways";
+import { formatCountdown, PLATFORM_GROUPS } from "@/lib/giveaways";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
@@ -30,12 +30,28 @@ import {
   BellOff,
   Check,
   ExternalLink,
+  Hourglass,
   Loader2,
   Settings2,
   Sparkles,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useNow } from "@/hooks/use-now";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+
+/** Live countdown for an expiring save, from the app-wide shared clock. */
+function Countdown({ endsAt, className }: { endsAt: number | null; className?: string }) {
+  const now = useNow();
+  if (endsAt === null) return null;
+  return (
+    <>
+      <span aria-hidden>·</span>
+      <span className={cn("hud-num shrink-0 font-semibold", className)}>
+        {formatCountdown(endsAt, now)}
+      </span>
+    </>
+  );
+}
 
 interface Prefs {
   browserEnabled: boolean;
@@ -278,8 +294,8 @@ export function NotificationButton() {
             className="relative size-9 shrink-0"
             aria-label={
               alerts.unreadCount > 0
-                ? `New giveaway alerts, ${alerts.unreadCount} unread`
-                : "New giveaway alerts"
+                ? `Giveaway alerts, ${alerts.unreadCount} need you`
+                : "Giveaway alerts"
             }
           >
             {alerts.enabled ? (
@@ -317,13 +333,41 @@ function AlertList({
   alerts: GiveawayAlertFeed;
   onOpenSettings: () => void;
 }) {
-  if (!alerts.enabled) {
-    return (
+  const hasExpiring = alerts.expiring.length > 0;
+  const hasNew = alerts.enabled && alerts.items.length > 0;
+
+  // Nothing needs you: pitch whichever state is relevant right now.
+  if (!hasExpiring && !hasNew) {
+    return alerts.enabled ? (
+      <div className="p-4">
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium">You're all caught up</p>
+          {alerts.isChecking && (
+            <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+          )}
+        </div>
+        <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+          Nothing new since your last visit, and nothing in your library is
+          about to expire. We re-check every few minutes while Grantdrop is open.
+        </p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="mt-2 w-full gap-1.5 text-xs"
+          onClick={onOpenSettings}
+        >
+          <Settings2 className="size-3.5" />
+          Alert settings
+        </Button>
+      </div>
+    ) : (
       <div className="p-4">
         <p className="text-sm font-medium">Alerts are off</p>
         <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
           Turn them on and Grantdrop will badge this bell when a free game
-          matching your filters lands, while you have the app open.
+          matching your filters lands, while you have the app open. Saved offers
+          are always checked for expiring deadlines either way.
         </p>
         <Button
           type="button"
@@ -338,43 +382,10 @@ function AlertList({
     );
   }
 
-  if (alerts.items.length === 0) {
-    return (
-      <div className="p-4">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium">You're all caught up</p>
-          {alerts.isChecking && (
-            <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
-          )}
-        </div>
-        <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-          Nothing new since your last visit. We re-check every few minutes while
-          Grantdrop is open.
-        </p>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="mt-2 w-full gap-1.5 text-xs"
-          onClick={onOpenSettings}
-        >
-          <Settings2 className="size-3.5" />
-          Alert settings
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div>
       <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
-        <div>
-          <p className="text-sm font-semibold">
-            {alerts.items.length} new{" "}
-            {alerts.items.length === 1 ? "giveaway" : "giveaways"}
-          </p>
-          <p className="text-[11px] text-muted-foreground">Since your last visit</p>
-        </div>
+        <p className="text-sm font-semibold">{alerts.unreadCount} need you</p>
         <Button
           type="button"
           variant="ghost"
@@ -383,60 +394,114 @@ function AlertList({
           onClick={onOpenSettings}
         >
           <Settings2 className="size-3.5" />
-          Settings
+          {alerts.enabled ? "Settings" : "Turn on"}
         </Button>
       </div>
 
-      <ul className="max-h-[22rem] overflow-y-auto">
-        {alerts.items.map((item) => (
-          <li key={item.id}>
-            <NewGiveawayRow giveaway={item} />
-          </li>
-        ))}
-      </ul>
+      <div className="max-h-[24rem] overflow-y-auto">
+        {/* Deadlines first: these are the offers that actually get missed. */}
+        {hasExpiring && (
+          <section>
+            <h4 className="flex items-center gap-1.5 bg-secondary/40 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-amber-600 dark:text-amber-400">
+              <Hourglass className="size-3.5" />
+              Expiring from your library
+            </h4>
+            <ul>
+              {alerts.expiring.map((save) => (
+                <li key={save.giveawayId} className="border-t border-border/50">
+                  <AlertRow
+                    name={save.name}
+                    store={save.store}
+                    thumbnail={save.thumbnail}
+                    url={save.url}
+                    right={
+                      <Countdown
+                        endsAt={save.endsAt}
+                        className="text-amber-600 dark:text-amber-400"
+                      />
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-      <div className="border-t border-border/60 p-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="w-full gap-1.5 text-xs"
-          onClick={alerts.markAllRead}
-        >
-          <Check className="size-3.5" />
-          Mark all as read
-        </Button>
+        {hasNew && (
+          <section>
+            <h4 className="flex items-center gap-1.5 bg-secondary/40 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              <Sparkles className="size-3.5 text-primary" />
+              New since your last visit
+            </h4>
+            <ul>
+              {alerts.items.map((item) => (
+                <li key={item.id} className="border-t border-border/50">
+                  <AlertRow
+                    name={item.name}
+                    store={item.store}
+                    thumbnail={item.thumbnail}
+                    url={item.url}
+                    right={
+                      item.worthAmount > 0 ? (
+                        <span className="hud-num shrink-0 text-xs font-semibold text-primary">
+                          ${Math.round(item.worthAmount)}
+                        </span>
+                      ) : null
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </div>
+
+      {hasNew && (
+        <div className="border-t border-border/60 p-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="w-full gap-1.5 text-xs"
+            onClick={alerts.markAllRead}
+          >
+            <Check className="size-3.5" />
+            Mark new offers as read
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
-function NewGiveawayRow({ giveaway }: { giveaway: Giveaway }) {
+function AlertRow({
+  name,
+  store,
+  thumbnail,
+  url,
+  right,
+}: {
+  name: string;
+  store: string;
+  thumbnail: string;
+  url: string;
+  right?: ReactNode;
+}) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-secondary/50">
-      <div className="relative size-14 shrink-0 overflow-hidden rounded-md border border-border/70">
+      <div className="size-12 shrink-0 overflow-hidden rounded-md border border-border/70 xs:size-14">
         <img
-          src={giveaway.thumbnail}
+          src={thumbnail}
           alt=""
           loading="lazy"
           className="size-full object-cover"
         />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium leading-tight">
-          {giveaway.name}
-        </p>
+        <p className="truncate text-[13px] font-medium leading-tight">{name}</p>
         <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <Sparkles className="size-3 shrink-0 text-primary" />
-          {giveaway.store}
-          {giveaway.worthAmount > 0 && (
-            <>
-              <span aria-hidden>·</span>
-              <span className="hud-num font-semibold text-primary">
-                ${Math.round(giveaway.worthAmount)}
-              </span>
-            </>
-          )}
+          {store}
+          {right}
         </p>
       </div>
       <Button
@@ -444,9 +509,8 @@ function NewGiveawayRow({ giveaway }: { giveaway: Giveaway }) {
         variant="outline"
         size="sm"
         className="h-8 shrink-0 gap-1.5 text-xs"
-        onClick={() =>
-          window.open(giveaway.url, "_blank", "noopener,noreferrer")
-        }
+        onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+        aria-label={`Claim ${name} on ${store}`}
       >
         <ExternalLink className="size-3.5" />
         Get
