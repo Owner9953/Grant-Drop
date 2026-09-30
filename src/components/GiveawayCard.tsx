@@ -204,10 +204,11 @@ export function GiveawayCard({
             </span>
           )}
           {giveaway.users > 0 && (
+            // The feed reports a `users` counter, not verified redemptions.
             <span className="inline-flex shrink-0 items-center gap-1">
               <Users className="size-3.5 shrink-0" />
               <span className="hud-num">{compactNumber(giveaway.users)}</span>
-              <span className="hidden xl:inline"> claimed</span>
+              <span className="hidden xl:inline"> users</span>
             </span>
           )}
           {giveaway.endsAt === null && (

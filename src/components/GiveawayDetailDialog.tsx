@@ -15,12 +15,20 @@ import {
   formatCountdown,
   formatWorth,
   type Giveaway,
+  msRemaining,
   tidyDescription,
   URGENCY_TEXT,
   urgencyLevel,
 } from "@/lib/giveaways";
 import { cn } from "@/lib/utils";
-import { Bookmark, Check, ExternalLink, Timer, Users } from "lucide-react";
+import {
+  Bookmark,
+  Check,
+  ExternalLink,
+  Hourglass,
+  ShieldCheck,
+  Timer,
+} from "lucide-react";
 
 /** Full offer view: art, value, deadline, description and claim steps. */
 export function GiveawayDetailDialog({
@@ -49,6 +57,9 @@ export function GiveawayDetailDialog({
     .map((line) => line.trim())
     .filter(Boolean);
   const urgency = urgencyLevel(giveaway.endsAt, now);
+  const remaining = msRemaining(giveaway.endsAt, now);
+  const expired = remaining !== null && remaining <= 0;
+  const description = tidyDescription(giveaway.description);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,25 +72,34 @@ export function GiveawayDetailDialog({
             aspect="aspect-[2/1]"
           />
           <ArtScrim />
+          {giveaway.drmFree && (
+            <span className="absolute bottom-3 left-3 inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-black/60 px-2 py-1 text-[11px] font-semibold text-white backdrop-blur-md">
+              <ShieldCheck className="size-3.5" />
+              DRM-free
+            </span>
+          )}
         </div>
 
-        <div className="space-y-6 p-4 pb-safe sm:p-6">
+        <div className="space-y-6 p-4 sm:p-6">
           <DialogHeader className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary" className="border-border/70 text-xs">
                 {giveaway.store}
               </Badge>
-              {giveaway.drmFree && (
-                <Badge
-                  variant="secondary"
-                  className="border-border/70 text-xs text-primary"
-                >
-                  DRM-free
-                </Badge>
-              )}
               {giveaway.type !== "Game" && (
                 <Badge variant="secondary" className="border-border/70 text-xs">
                   {giveaway.type}
+                </Badge>
+              )}
+              {/* Repeated, not moved: "DRM-free" is the single most
+                  trust-relevant fact about an offer, so it earns a second
+                  position next to the art. */}
+              {giveaway.drmFree && (
+                <Badge
+                  variant="secondary"
+                  className="border-primary/30 bg-primary/10 text-xs text-primary"
+                >
+                  DRM-free
                 </Badge>
               )}
             </div>
@@ -91,12 +111,14 @@ export function GiveawayDetailDialog({
             </DialogDescription>
           </DialogHeader>
 
+          <DeadlineBanner endsAt={giveaway.endsAt} expired={expired} urgency={urgency} />
+
           <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70">
             <div className="bg-card px-3 py-3.5 sm:px-4">
               <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
                 Worth
               </dt>
-              <dd className="mt-1 text-base font-semibold tabular-nums text-primary">
+              <dd className="hud-num mt-1 text-base font-semibold text-primary">
                 {formatWorth(giveaway.worth, giveaway.worthAmount)}
               </dd>
             </div>
@@ -106,26 +128,30 @@ export function GiveawayDetailDialog({
               </dt>
               <dd
                 className={cn(
-                  "mt-1 text-sm font-semibold tabular-nums",
-                  URGENCY_TEXT[urgency],
+                  // An expired offer used to render in the same muted grey as
+                  // "no deadline", which read as "no hurry" rather than "gone".
+                  "hud-num mt-1 text-sm font-semibold",
+                  expired ? "text-destructive" : URGENCY_TEXT[urgency],
                 )}
               >
-                {formatCountdown(giveaway.endsAt, now)}
+                {expired ? "Expired" : formatCountdown(giveaway.endsAt, now)}
               </dd>
             </div>
             <div className="bg-card px-3 py-3.5 sm:px-4">
+              {/* The feed reports a `users` counter, not verified redemptions,
+                  so it is labelled for what it is. */}
               <dt className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground">
-                Claimed by
+                Users
               </dt>
-              <dd className="mt-1 text-base font-semibold tabular-nums">
+              <dd className="hud-num mt-1 text-base font-semibold">
                 {compactNumber(giveaway.users)}
               </dd>
             </div>
           </dl>
 
-          {tidyDescription(giveaway.description) && (
+          {description && (
             <p className="text-sm leading-6 text-muted-foreground">
-              {tidyDescription(giveaway.description)}
+              {description}
             </p>
           )}
 
@@ -134,8 +160,11 @@ export function GiveawayDetailDialog({
               <h3 className="text-sm font-semibold tracking-tight">How to claim</h3>
               <ol className="mt-3 space-y-2.5">
                 {steps.map((step, index) => (
-                  <li key={index} className="flex gap-3 text-sm leading-6 text-muted-foreground">
-                    <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-semibold tabular-nums text-foreground">
+                  <li
+                    key={index}
+                    className="flex gap-3 text-sm leading-6 text-muted-foreground"
+                  >
+                    <span className="mt-1 grid size-5 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-semibold tabular-nums text-foreground">
                       {index + 1}
                     </span>
                     {step}
@@ -145,50 +174,144 @@ export function GiveawayDetailDialog({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <Timer className="size-3.5" />
-            <span>{giveaway.endsAt === null ? "No published deadline" : `Ends ${new Date(giveaway.endsAt).toLocaleString()}`}</span>
-            <span aria-hidden>·</span>
-            <Users className="size-3.5" />
-            <span>{giveaway.platforms.join(", ")}</span>
-          </div>
+          {giveaway.platforms.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold tracking-tight">Available on</h3>
+              <ul className="mt-2.5 flex flex-wrap gap-1.5">
+                {giveaway.platforms.map((platform) => (
+                  <li
+                    key={platform}
+                    className="rounded-md border border-border/70 bg-secondary/50 px-2 py-1 text-xs text-muted-foreground"
+                  >
+                    {platform}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-          <div className="flex flex-col gap-2 pb-1 sm:flex-row">
+          {giveaway.endsAt !== null && (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Timer className="size-3.5 shrink-0" />
+              {new Date(giveaway.endsAt).toLocaleString(undefined, {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}
+            </p>
+          )}
+        </div>
+
+        {/* The offer's whole point is the claim button, so it stays pinned to
+            the bottom of the sheet instead of scrolling away under a long
+            description or a multi-step redemption. */}
+        <div className="sticky bottom-0 z-10 border-t border-border/60 bg-background/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] pt-3 backdrop-blur-xl sm:px-6 sm:pb-3">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <ExternalLinkButton
               href={giveaway.url}
-              className="glow-accent h-10 flex-1 gap-1.5"
-              aria-label={`Claim ${giveaway.name} on ${giveaway.store}`}
+              className={cn(
+                "h-11 gap-1.5",
+                "sm:flex-1",
+                // Never disabled: the feed can lag the store, so an offer we
+                // call expired may still be redeemable. Relabelled instead.
+                !expired && "glow-accent",
+              )}
+              aria-label={
+                expired
+                  ? `Check ${giveaway.name} on ${giveaway.store}`
+                  : `Claim ${giveaway.name} on ${giveaway.store}`
+              }
             >
-              Claim on {giveaway.store}
+              {expired ? `Check on ${giveaway.store}` : `Claim on ${giveaway.store}`}
               <ExternalLink className="size-3.5" />
             </ExternalLinkButton>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-10 gap-1.5 sm:w-auto"
-              onClick={() => onToggleSave(giveaway)}
-            >
-              <Bookmark className={cn("size-4", isSaved && "fill-current text-primary")} />
-              {isSaved ? "In your library" : "Save for later"}
-            </Button>
-            {onToggleClaimed && isSaved && (
+            <div className="flex gap-2">
               <Button
                 type="button"
                 variant="outline"
-                className={cn(
-                  "h-10 gap-1.5 sm:w-auto",
-                  isClaimed && "border-primary text-primary hover:text-primary",
-                )}
-                aria-pressed={Boolean(isClaimed)}
-                onClick={() => onToggleClaimed(giveaway)}
+                className="h-11 flex-1 gap-1.5 sm:flex-none"
+                onClick={() => onToggleSave(giveaway)}
+                aria-pressed={Boolean(isSaved)}
               >
-                <Check className={cn("size-4", !isClaimed && "opacity-40")} />
-                {isClaimed ? "Claimed" : "Mark claimed"}
+                <Bookmark
+                  className={cn("size-4", isSaved && "fill-current text-primary")}
+                />
+                <span className="xs:hidden">Save</span>
+                <span className="hidden xs:inline">
+                  {isSaved ? "In your library" : "Save for later"}
+                </span>
               </Button>
-            )}
+              {onToggleClaimed && isSaved && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(
+                    "h-11 shrink-0 gap-1.5",
+                    isClaimed && "border-primary text-primary hover:text-primary",
+                  )}
+                  aria-pressed={Boolean(isClaimed)}
+                  onClick={() => onToggleClaimed(giveaway)}
+                >
+                  <Check className={cn("size-4", !isClaimed && "opacity-40")} />
+                  <span className="hidden xs:inline">
+                    {isClaimed ? "Claimed" : "Mark claimed"}
+                  </span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * A single line of deadline state, so the one thing that decides whether an
+ * offer is still worth clicking can't be missed by reading three small tiles.
+ */
+function DeadlineBanner({
+  endsAt,
+  expired,
+  urgency,
+}: {
+  endsAt: number | null;
+  expired: boolean;
+  urgency: ReturnType<typeof urgencyLevel>;
+}) {
+  if (endsAt === null) {
+    return (
+      <p className="flex items-center gap-2 rounded-lg border border-border/70 bg-secondary/40 px-3.5 py-2.5 text-xs text-muted-foreground">
+        <Timer className="size-3.5 shrink-0" />
+        No published deadline — this offer has no end date set.
+      </p>
+    );
+  }
+
+  if (expired) {
+    return (
+      <p className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3.5 py-2.5 text-xs font-medium text-destructive">
+        <Hourglass className="size-3.5 shrink-0" />
+        This offer's deadline has passed. Check the store page in case the feed
+        is behind.
+      </p>
+    );
+  }
+
+  if (urgency === "normal") return null;
+
+  return (
+    <p
+      className={cn(
+        "flex items-center gap-2 rounded-lg border px-3.5 py-2.5 text-xs font-medium",
+        urgency === "critical"
+          ? "border-destructive/30 bg-destructive/10 text-destructive"
+          : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+      )}
+    >
+      <Hourglass className="size-3.5 shrink-0" />
+      {urgency === "critical"
+        ? "Under six hours left — claim it now or lose it."
+        : "Under a day left on this one."}
+    </p>
   );
 }
