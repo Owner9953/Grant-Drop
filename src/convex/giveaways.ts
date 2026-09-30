@@ -6,7 +6,7 @@
  */
 
 import { v } from "convex/values";
-import { runFeedQuery } from "./feed";
+import { runFeedQuery, runFeedStats } from "./feed";
 import { action } from "./_generated/server";
 
 const SORT_VALUES = v.union(
@@ -16,17 +16,29 @@ const SORT_VALUES = v.union(
   v.literal("random"),
 );
 
+const FILTER_ARGS = {
+  platform: v.optional(v.string()),
+  type: v.optional(v.string()),
+  sortBy: v.optional(SORT_VALUES),
+  search: v.optional(v.string()),
+};
+
 export const listGiveaways = action({
   args: {
-    platform: v.optional(v.string()),
-    type: v.optional(v.string()),
-    sortBy: v.optional(SORT_VALUES),
+    ...FILTER_ARGS,
     page: v.optional(v.number()),
     pageSize: v.optional(v.number()),
-    search: v.optional(v.string()),
   },
   handler: async (_ctx, args) => {
     return runFeedQuery(args);
+  },
+});
+
+/** Board-level totals for the dashboard summary tiles. */
+export const feedStats = action({
+  args: FILTER_ARGS,
+  handler: async (_ctx, args) => {
+    return runFeedStats(args);
   },
 });
 

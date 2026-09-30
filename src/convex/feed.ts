@@ -175,15 +175,11 @@ export function buildParams(query: FeedQuery): URLSearchParams {
   return params;
 }
 
-/** Runs a feed query end to end: fetch, filter, search, then page. */
-export async function runFeedQuery(query: FeedQuery): Promise<FeedResult> {
-  const page = Math.max(1, Math.floor(query.page ?? 1));
-  const pageSize = Math.min(
-    MAX_PAGE_SIZE,
-    Math.max(1, Math.floor(query.pageSize ?? 12)),
-  );
+/** The full filtered set for a query, before paging is applied. */
+async function loadFiltered(
+  query: FeedQuery,
+): Promise<{ all: Giveaway[]; stale: boolean; fetchedAt: number }> {
   const platform = query.platform ?? "all";
-
   const params = buildParams(query);
   const { data, stale } = await loadThroughCache(params.toString(), params);
 
@@ -198,11 +194,57 @@ export async function runFeedQuery(query: FeedQuery): Promise<FeedResult> {
     );
   });
 
+  return { all, stale, fetchedAt: Date.now() };
+}
+
+/** Runs a feed query end to end: fetch, filter, search, then page. */
+export async function runFeedQuery(query: FeedQuery): Promise<FeedResult> {
+  const page = Math.max(1, Math.floor(query.page ?? 1));
+  const pageSize = Math.min(
+    MAX_PAGE_SIZE,
+    Math.max(1, Math.floor(query.pageSize ?? 12)),
+  );
+
+  const { all, stale, fetchedAt } = await loadFiltered(query);
   const start = (page - 1) * pageSize;
   return {
     items: all.slice(start, start + pageSize),
     total: all.length,
     stale,
-    fetchedAt: Date.now(),
+    fetchedAt,
   };
+}
+
+export interface FeedStats {
+  /** Offers matching the current filters. */
+  total: number;
+  /** Sum of listed retail prices across those offers. */
+  totalValue: number;
+  /** Offers expiring within 24 hours. */
+  expiringSoon: number;
+  /** Offers with no published deadline. */
+  noDeadline: number;
+  fetchedAt: number;
+  stale: boolean;
+}
+
+/**
+ * Aggregates over the whole filtered set, not just the visible page, so the
+ * dashboard's summary tiles describe the board rather than one screen of it.
+ */
+export async function runFeedStats(query: FeedQuery): Promise<FeedStats> {
+  const { all, stale, fetchedAt } = await loadFiltered(query);
+  const now = Date.now();
+
+  let totalValue = 0;
+  let expiringSoon = 0;
+  let noDeadline = 0;
+
+  for (const item of all) {
+    totalValue += item.worthAmount;
+    if (item.endsAt === null) noDeadline += 1;
+    else if (item.endsAt - now < 24 * 3_600_000) expiringSoon += 1;
+  }
+
+  return { total: all.length, totalValue, expiringSoon, noDeadline, fetchedAt, stale };
 }

@@ -15,13 +15,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { CalendarAgenda } from "@/components/CalendarAgenda";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { StatTiles } from "@/components/StatTiles";
 import { GiveawaySearch } from "@/components/GiveawaySearch";
+import { useFiltersInUrl } from "@/hooks/use-filter-url";
 import { ValueExplainer } from "@/components/ValueExplainer";
 import { downloadCsv, toCsv } from "@/lib/library-csv";
 import { useListNavigation, useNow } from "@/hooks/use-now";
 import {
   DEFAULT_FILTERS,
   formatFreshness,
+  useFeedStats,
   useGiveaways,
 } from "@/hooks/use-giveaways";
 import { api } from "@/convex/_generated/api";
@@ -41,6 +44,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Flame,
+  Gift,
+  Hourglass,
   Inbox,
   LayoutGrid,
   LogOut,
@@ -58,21 +64,16 @@ export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const [platform, setPlatform] = useState(DEFAULT_FILTERS.platform);
-  const [type, setType] = useState(DEFAULT_FILTERS.type);
-  const [sortBy, setSortBy] = useState(DEFAULT_FILTERS.sortBy);
-  const [search, setSearch] = useState("");
+  const { filters, update, view, updateView } = useFiltersInUrl();
+  const { platform, type, sortBy, search } = filters;
+
   const [tab, setTab] = useState<"browse" | "library">("browse");
   const [libraryFilter, setLibraryFilter] = useState<"saved" | "claimed">("saved");
-  const [view, setView] = useState<"list" | "calendar">("list");
   const [page, setPage] = useState(1);
   const [refreshToken, setRefreshToken] = useState(0);
   const [selected, setSelected] = useState<Giveaway | null>(null);
 
-  const filters = useMemo(
-    () => ({ platform, type, sortBy, search }),
-    [platform, type, sortBy, search],
-  );
+  const stats = useFeedStats(filters);
   const { giveaways, total, stale, fetchedAt, trendingIds, isLoading, error } =
     useGiveaways(filters, page, PAGE_SIZE, refreshToken);
 
@@ -82,7 +83,7 @@ export default function Dashboard() {
   // One handler for both the header and toolbar fields, and it always resets
   // to the first page so a filter change can't strand you on an empty page 3.
   const handleSearchChange = (value: string) => {
-    setSearch(value);
+    update({ search: value });
     setPage(1);
   };
 
@@ -164,10 +165,7 @@ export default function Dashboard() {
   };
 
   const resetFilters = () => {
-    setPlatform(DEFAULT_FILTERS.platform);
-    setType(DEFAULT_FILTERS.type);
-    setSortBy(DEFAULT_FILTERS.sortBy);
-    setSearch("");
+    update({ ...DEFAULT_FILTERS });
     setPage(1);
   };
 
@@ -180,6 +178,11 @@ export default function Dashboard() {
     type !== DEFAULT_FILTERS.type ||
     sortBy !== DEFAULT_FILTERS.sortBy ||
     search.length > 0;
+
+  const savedCount = savedList?.length ?? 0;
+  const claimedCount = (savedList ?? []).filter(
+    (item) => item.claimedAt !== null,
+  ).length;
 
   return (
     <div className="game-backdrop min-h-screen bg-background text-foreground">
@@ -260,6 +263,37 @@ export default function Dashboard() {
           </Tabs>
         </div>
 
+        {/* ------------------------------------------------------- Summary row */}
+        {!showLibrary && (
+          <StatTiles
+            className="mt-8"
+            tiles={[
+              {
+                label: "Live offers",
+                value: stats ? String(stats.total) : "—",
+                icon: Gift,
+              },
+              {
+                label: "Value on board",
+                value: stats ? `$${Math.round(stats.totalValue)}` : "—",
+                icon: Flame,
+                tone: "accent",
+              },
+              {
+                label: "Expiring < 24h",
+                value: stats ? String(stats.expiringSoon) : "—",
+                icon: Hourglass,
+                tone: stats && stats.expiringSoon > 0 ? "warn" : "default",
+              },
+              {
+                label: "In your library",
+                value: savedList ? `${savedCount} · ${claimedCount} claimed` : "—",
+                icon: Bookmark,
+              },
+            ]}
+          />
+        )}
+
         {/* ---------------------------------------------------------- Filters */}
         {!showLibrary && (
           <div className="mt-8 space-y-4">
@@ -276,7 +310,7 @@ export default function Dashboard() {
                     key={item.value || "all"}
                     type="button"
                     onClick={() => {
-                      setType(item.value);
+                      update({ type: item.value });
                       setPage(1);
                     }}
                     aria-pressed={type === item.value}
@@ -295,7 +329,7 @@ export default function Dashboard() {
                 <Select
                   value={platform}
                   onValueChange={(value) => {
-                    setPlatform(value);
+                    update({ platform: value });
                     setPage(1);
                   }}
                 >
@@ -318,7 +352,7 @@ export default function Dashboard() {
                 <Select
                   value={sortBy}
                   onValueChange={(value) => {
-                    setSortBy(value as typeof sortBy);
+                    update({ sortBy: value as typeof sortBy });
                     setPage(1);
                   }}
                 >
@@ -365,7 +399,7 @@ export default function Dashboard() {
                     <button
                       key={option.key}
                       type="button"
-                      onClick={() => setView(option.key)}
+                      onClick={() => updateView(option.key)}
                       aria-pressed={view === option.key}
                       className={cn(
                         "inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium transition-colors",

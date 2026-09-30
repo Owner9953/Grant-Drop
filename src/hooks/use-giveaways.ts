@@ -101,6 +101,50 @@ export function formatFreshness(fetchedAt: number | null, now = Date.now()): str
   return `${Math.round(hours / 24)} d ago`;
 }
 
+export interface FeedStats {
+  total: number;
+  totalValue: number;
+  expiringSoon: number;
+  noDeadline: number;
+  fetchedAt: number;
+  stale: boolean;
+}
+
+/**
+ * Aggregates for the current filters. Runs independently of paging so the
+ * summary tiles describe the whole board, not one screen of it.
+ */
+export function useFeedStats(filters: GiveawayFilters): FeedStats | undefined {
+  const feedStats = useAction(api.giveaways.feedStats);
+  const [stats, setStats] = useState<FeedStats | undefined>(undefined);
+  const requestRef = useRef(0);
+
+  const search = filters.search.trim();
+  const key = `${filters.platform}|${filters.type}|${filters.sortBy}|${search}`;
+
+  useEffect(() => {
+    const requestId = ++requestRef.current;
+    const timer = setTimeout(() => {
+      feedStats({
+        platform: filters.platform as PlatformArg,
+        type: filters.type || undefined,
+        sortBy: filters.sortBy,
+        search: search || undefined,
+      })
+        .then((result) => {
+          if (requestRef.current === requestId) setStats(result);
+        })
+        .catch(() => {
+          if (requestRef.current === requestId) setStats(undefined);
+        });
+    }, search ? 300 : 0);
+
+    return () => clearTimeout(timer);
+  }, [key, feedStats, filters.platform, filters.type, filters.sortBy, search]);
+
+  return stats;
+}
+
 export function useFeaturedGiveaways(count = 8) {
   const featured = useAction(api.giveaways.featuredGiveaways);
   const [giveaways, setGiveaways] = useState<Giveaway[]>([]);
