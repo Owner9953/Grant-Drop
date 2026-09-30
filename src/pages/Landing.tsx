@@ -160,7 +160,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="game-backdrop min-h-screen bg-background text-foreground">
       {/* ---------------------------------------------------------------- Nav */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <nav className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-5">
@@ -207,14 +207,6 @@ export default function Landing() {
 
       {/* --------------------------------------------------------------- Hero */}
       <section className="relative overflow-hidden border-b border-border/60">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.55]"
-          style={{
-            backgroundImage:
-              "radial-gradient(60rem 32rem at 50% -18%, color-mix(in oklch, var(--primary) 16%, transparent), transparent 70%)",
-          }}
-        />
         <div className="relative mx-auto w-full max-w-6xl px-5 pb-20 pt-20 sm:pt-28">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
@@ -224,15 +216,15 @@ export default function Landing() {
           >
             <Badge
               variant="secondary"
-              className="mb-6 gap-1.5 border-border/70 bg-background/70 px-3 py-1 text-xs font-medium"
+              className="mb-6 gap-1.5 border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
             >
-              <Sparkles className="size-3.5 text-primary" />
+              <Sparkles className="size-3.5" />
               Live feed · refreshed continuously
             </Badge>
-            <h1 className="text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.03em] sm:text-6xl">
+            <h1 className="text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.035em] sm:text-6xl">
               Every free PC game,
               <br />
-              <span className="text-primary">on one clean board.</span>
+              <span className="text-primary text-glow">on one clean board.</span>
             </h1>
             <p className="text-balance mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground">
               Grantdrop pulls active giveaways from every major storefront into a
@@ -294,10 +286,8 @@ export default function Landing() {
       <section id="live" className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 py-20">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-              Live right now
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
+            <p className="kicker">Live right now</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
               Every active giveaway, newest first
             </h2>
             <p className="mt-3 text-[15px] leading-7 text-muted-foreground">
@@ -491,10 +481,8 @@ export default function Landing() {
       <section id="features" className="scroll-mt-20 border-y border-border/60 bg-secondary/40">
         <div className="mx-auto w-full max-w-6xl px-5 py-20">
           <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-              Built for collectors
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
+            <p className="kicker">Built for collectors</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
               A quieter way to track free games
             </h2>
           </div>
@@ -516,10 +504,8 @@ export default function Landing() {
       <section id="how" className="mx-auto w-full max-w-6xl scroll-mt-20 px-5 py-20">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">
-              How it works
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.02em] sm:text-4xl">
+            <p className="kicker">How it works</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
               Three steps to a bigger library
             </h2>
             <p className="mt-4 text-[15px] leading-7 text-muted-foreground">

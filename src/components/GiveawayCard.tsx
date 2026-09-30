@@ -9,10 +9,11 @@ import {
   formatWorth,
   isFreshGiveaway,
   type Giveaway,
+  remainingFraction,
   URGENCY_TEXT,
   urgencyLevel,
 } from "@/lib/giveaways";
-import { Bookmark, Check, ExternalLink, Flame, Timer, Users } from "lucide-react";
+import { Bookmark, Check, ExternalLink, Flame, ShieldCheck, Timer, Users } from "lucide-react";
 
 /**
  * The offer tile used on both the landing page and the app grid. `onSelect`
@@ -85,7 +86,8 @@ export function GiveawayCard({
       }
       className={cn(
         "surface-card group relative flex flex-col overflow-hidden transition-all duration-300",
-        "hover:-translate-y-0.5 hover:border-border hover:shadow-lg focus-within:-translate-y-0.5",
+        "hover:-translate-y-1 hover:border-primary/40 hover:shadow-2xl focus-within:-translate-y-1",
+        "hover:[box-shadow:0_0_0_1px_color-mix(in_oklch,var(--primary)_45%,transparent),0_18px_50px_-14px_color-mix(in_oklch,var(--primary)_55%,transparent)]",
         onItemRef &&
           "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
@@ -96,17 +98,24 @@ export function GiveawayCard({
           src={giveaway.thumbnail}
           alt=""
           loading="lazy"
-          className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+          className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+        />
+        {/* Scrim: keeps the badges legible over any artwork and blends the image
+            into the card body instead of ending on a hard edge. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-card via-card/10 to-black/35"
         />
         <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <Badge className="border-0 bg-background/85 text-[11px] font-medium tracking-tight text-foreground backdrop-blur-sm">
+            <Badge className="border border-white/10 bg-black/55 text-[11px] font-medium tracking-tight text-white backdrop-blur-md">
               {giveaway.store}
             </Badge>
             {status && (
               <Badge
                 className={cn(
-                  "gap-1 text-[11px] font-semibold backdrop-blur-sm",
+                  "gap-1 text-[11px] font-semibold backdrop-blur-md",
+                  status.icon ? "border border-white/10 bg-black/55 text-white" : "",
                   status.className,
                 )}
               >
@@ -115,16 +124,16 @@ export function GiveawayCard({
               </Badge>
             )}
           </div>
-          <Badge
+          <span
             className={cn(
-              "border-0 text-[11px] font-semibold tabular-nums backdrop-blur-sm",
+              "hud-num shrink-0 rounded-md border px-2 py-1 text-[11px] font-semibold backdrop-blur-md",
               giveaway.worthAmount > 0
-                ? "bg-primary text-primary-foreground"
-                : "bg-background/85 text-muted-foreground",
+                ? "border-primary/40 bg-primary/15 text-primary"
+                : "border-white/10 bg-black/55 text-white/70",
             )}
           >
             {formatWorth(giveaway.worth, giveaway.worthAmount)}
-          </Badge>
+          </span>
         </div>
         {onToggleSave && (
           <button
@@ -133,11 +142,11 @@ export function GiveawayCard({
             aria-pressed={Boolean(isSaved)}
             onClick={() => onToggleSave(giveaway)}
             className={cn(
-              "absolute bottom-3 right-3 inline-flex size-11 items-center justify-center rounded-full border backdrop-blur-sm transition-all",
+              "absolute bottom-3 right-3 inline-flex size-11 items-center justify-center rounded-full border backdrop-blur-md transition-all",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
               isSaved
-                ? "border-transparent bg-primary text-primary-foreground"
-                : "border-border/60 bg-background/80 text-muted-foreground hover:bg-background hover:text-foreground",
+                ? "border-primary/40 bg-primary text-primary-foreground"
+                : "border-white/10 bg-black/55 text-white/80 hover:bg-black/75 hover:text-white",
             )}
           >
             <Bookmark className={cn("size-4", isSaved && "fill-current")} />
@@ -146,30 +155,59 @@ export function GiveawayCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="space-y-1.5">
-          <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug tracking-tight">
+        <div className="space-y-2">
+          <h3 className="line-clamp-2 text-[17px] font-semibold leading-[1.2] tracking-[-0.02em]">
             {giveaway.name}
           </h3>
-          <p className="line-clamp-1 text-xs text-muted-foreground">
+          <p className="line-clamp-1 text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
             {giveaway.platforms.filter((p) => p !== "PC").join(" · ") || "PC"}
           </p>
         </div>
 
+        {/* Time-remaining meter: a visual read on how much runway the offer has. */}
+        {giveaway.endsAt !== null && (
+          <div className="flex items-center gap-2">
+            <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-[width] duration-500",
+                  urgency === "critical" && "bg-destructive",
+                  urgency === "warning" && "bg-amber-500",
+                  urgency === "normal" && "bg-primary",
+                )}
+                style={{ width: `${remainingFraction(giveaway.endsAt, now)}%` }}
+              />
+            </div>
+            <span
+              className={cn(
+                "hud-num shrink-0 text-[11px] font-semibold",
+                URGENCY_TEXT[urgency],
+              )}
+            >
+              {formatCountdown(giveaway.endsAt, now).replace(" left", "")}
+            </span>
+          </div>
+        )}
+
         {/* Meta on its own line so the action row below always has room. */}
         <div className="mt-auto flex items-center gap-3 border-t border-border/60 pt-3 text-[11px] tabular-nums text-muted-foreground">
-          <span
-            className={cn(
-              "inline-flex min-w-0 items-center gap-1 font-medium",
-              URGENCY_TEXT[urgency],
-            )}
-          >
-            <Timer className="size-3.5 shrink-0" />
-            <span className="truncate">{formatCountdown(giveaway.endsAt, now)}</span>
-          </span>
+          {giveaway.drmFree && (
+            <span className="inline-flex shrink-0 items-center gap-1 font-medium text-primary">
+              <ShieldCheck className="size-3.5 shrink-0" />
+              DRM-free
+            </span>
+          )}
           {giveaway.users > 0 && (
             <span className="inline-flex shrink-0 items-center gap-1">
               <Users className="size-3.5 shrink-0" />
-              {compactNumber(giveaway.users)}
+              <span className="hud-num">{compactNumber(giveaway.users)}</span>
+              <span className="hidden xl:inline"> claimed</span>
+            </span>
+          )}
+          {giveaway.endsAt === null && (
+            <span className="inline-flex items-center gap-1">
+              <Timer className="size-3.5 shrink-0" />
+              No deadline
             </span>
           )}
         </div>

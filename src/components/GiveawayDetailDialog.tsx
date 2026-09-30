@@ -60,7 +60,7 @@ export function GiveawayDetailDialog({
           />
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-black/40"
           />
         </div>
 
@@ -157,7 +157,7 @@ export function GiveawayDetailDialog({
           <div className="flex flex-col gap-2 sm:flex-row">
             <ExternalLinkButton
               href={giveaway.url}
-              className="h-10 flex-1 gap-1.5"
+              className="glow-accent h-10 flex-1 gap-1.5"
               aria-label={`Claim ${giveaway.name} on ${giveaway.store}`}
             >
               Claim on {giveaway.store}

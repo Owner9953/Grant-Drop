@@ -5,12 +5,15 @@ import type { ReactNode } from "react";
  * Class-based theming: `index.css` declares `.dark` via
  * `@custom-variant dark (&:is(.dark *))`, so the provider toggles a class on
  * <html> rather than switching colour schemes in CSS.
+ *
+ * Dark is the default: this is a games product and the light theme is the
+ * secondary option, reachable from the toggle.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
+      defaultTheme="dark"
       enableSystem
       disableTransitionOnChange
     >

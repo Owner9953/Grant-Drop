@@ -46,72 +46,73 @@
 :root {
   --radius: 0.75rem;
 
-  /* Warm paper neutrals with a single refined jade accent. */
-  --background: oklch(0.985 0.003 95);
-  --foreground: oklch(0.19 0.008 100);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.19 0.008 100);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.19 0.008 100);
-  --primary: oklch(0.62 0.12 165);
+  /* Cool graphite neutrals with a single vivid jade accent. The light theme is
+     the secondary mode; dark is the primary experience (see ThemeProvider). */
+  --background: oklch(0.975 0.005 240);
+  --foreground: oklch(0.16 0.012 250);
+  --card: oklch(0.995 0.002 240);
+  --card-foreground: oklch(0.16 0.012 250);
+  --popover: oklch(0.995 0.002 240);
+  --popover-foreground: oklch(0.16 0.012 250);
+  --primary: oklch(0.6 0.14 165);
   --primary-foreground: oklch(0.99 0.005 160);
   --secondary: oklch(0.968 0.004 95);
   --secondary-foreground: oklch(0.28 0.01 100);
-  --muted: oklch(0.968 0.004 95);
-  --muted-foreground: oklch(0.53 0.008 100);
-  --accent: oklch(0.955 0.02 165);
-  --accent-foreground: oklch(0.35 0.06 165);
+  --muted: oklch(0.955 0.005 240);
+  --muted-foreground: oklch(0.52 0.012 250);
+  --accent: oklch(0.94 0.03 165);
+  --accent-foreground: oklch(0.34 0.07 165);
   --destructive: oklch(0.577 0.215 27.325);
-  --border: oklch(0.912 0.004 95);
-  --input: oklch(0.912 0.004 95);
-  --ring: oklch(0.62 0.12 165);
-  --chart-1: oklch(0.62 0.12 165);
-  --chart-2: oklch(0.7 0.13 200);
-  --chart-3: oklch(0.78 0.13 85);
+  --border: oklch(0.9 0.006 245);
+  --input: oklch(0.9 0.006 245);
+  --ring: oklch(0.6 0.14 165);
+  --chart-1: oklch(0.6 0.14 165);
+  --chart-2: oklch(0.7 0.13 205);
+  --chart-3: oklch(0.78 0.13 88);
   --chart-4: oklch(0.65 0.16 305);
   --chart-5: oklch(0.7 0.15 25);
-  --sidebar: oklch(0.99 0.002 95);
-  --sidebar-foreground: oklch(0.19 0.008 100);
-  --sidebar-primary: oklch(0.62 0.12 165);
+  --sidebar: oklch(0.985 0.004 240);
+  --sidebar-foreground: oklch(0.16 0.012 250);
+  --sidebar-primary: oklch(0.6 0.14 165);
   --sidebar-primary-foreground: oklch(0.99 0.005 160);
-  --sidebar-accent: oklch(0.955 0.02 165);
-  --sidebar-accent-foreground: oklch(0.35 0.06 165);
-  --sidebar-border: oklch(0.912 0.004 95);
-  --sidebar-ring: oklch(0.62 0.12 165);
+  --sidebar-accent: oklch(0.94 0.03 165);
+  --sidebar-accent-foreground: oklch(0.34 0.07 165);
+  --sidebar-border: oklch(0.9 0.006 245);
+  --sidebar-ring: oklch(0.6 0.14 165);
 }
 
 .dark {
-  --background: oklch(0.16 0.006 100);
-  --foreground: oklch(0.97 0.002 95);
-  --card: oklch(0.205 0.007 100);
-  --card-foreground: oklch(0.97 0.002 95);
-  --popover: oklch(0.205 0.007 100);
-  --popover-foreground: oklch(0.97 0.002 95);
-  --primary: oklch(0.78 0.13 165);
-  --primary-foreground: oklch(0.18 0.02 165);
-  --secondary: oklch(0.26 0.007 100);
-  --secondary-foreground: oklch(0.97 0.002 95);
-  --muted: oklch(0.26 0.007 100);
-  --muted-foreground: oklch(0.68 0.006 100);
-  --accent: oklch(0.3 0.03 165);
-  --accent-foreground: oklch(0.9 0.09 165);
-  --destructive: oklch(0.65 0.19 22.216);
-  --border: oklch(1 0 0 / 9%);
+  --background: oklch(0.135 0.012 250);
+  --foreground: oklch(0.98 0.004 180);
+  --card: oklch(0.178 0.014 250);
+  --card-foreground: oklch(0.98 0.004 180);
+  --popover: oklch(0.178 0.014 250);
+  --popover-foreground: oklch(0.98 0.004 180);
+  --primary: oklch(0.8 0.17 163);
+  --primary-foreground: oklch(0.16 0.03 163);
+  --secondary: oklch(0.235 0.015 250);
+  --secondary-foreground: oklch(0.98 0.004 180);
+  --muted: oklch(0.235 0.015 250);
+  --muted-foreground: oklch(0.7 0.015 240);
+  --accent: oklch(0.3 0.045 163);
+  --accent-foreground: oklch(0.92 0.12 163);
+  --destructive: oklch(0.66 0.2 22);
+  --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.78 0.13 165);
-  --chart-1: oklch(0.78 0.13 165);
-  --chart-2: oklch(0.72 0.12 200);
-  --chart-3: oklch(0.82 0.12 85);
-  --chart-4: oklch(0.7 0.15 305);
-  --chart-5: oklch(0.72 0.14 25);
-  --sidebar: oklch(0.19 0.007 100);
-  --sidebar-foreground: oklch(0.97 0.002 95);
-  --sidebar-primary: oklch(0.78 0.13 165);
-  --sidebar-primary-foreground: oklch(0.18 0.02 165);
-  --sidebar-accent: oklch(0.3 0.03 165);
-  --sidebar-accent-foreground: oklch(0.9 0.09 165);
-  --sidebar-border: oklch(1 0 0 / 9%);
-  --sidebar-ring: oklch(0.78 0.13 165);
+  --ring: oklch(0.8 0.17 163);
+  --chart-1: oklch(0.8 0.17 163);
+  --chart-2: oklch(0.74 0.13 205);
+  --chart-3: oklch(0.84 0.14 88);
+  --chart-4: oklch(0.72 0.16 305);
+  --chart-5: oklch(0.74 0.16 25);
+  --sidebar: oklch(0.16 0.013 250);
+  --sidebar-foreground: oklch(0.98 0.004 180);
+  --sidebar-primary: oklch(0.8 0.17 163);
+  --sidebar-primary-foreground: oklch(0.16 0.03 163);
+  --sidebar-accent: oklch(0.3 0.045 163);
+  --sidebar-accent-foreground: oklch(0.92 0.12 163);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.8 0.17 163);
 }
 
 @layer base {
@@ -154,5 +155,62 @@
   }
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* ---------------------------------------------------------- game chrome */
+  /* Deep backdrop used behind every route: a faint tech grid plus two accent
+     blooms, so dark surfaces read as lit rather than flat. */
+  .game-backdrop {
+    position: relative;
+    isolation: isolate;
+  }
+  .game-backdrop::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, color-mix(in oklch, var(--foreground) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklch, var(--foreground) 4%, transparent) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(120% 80% at 50% 0%, black, transparent 70%);
+  }
+  .game-backdrop::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(52rem 28rem at 18% -6%, color-mix(in oklch, var(--primary) 16%, transparent), transparent 65%),
+      radial-gradient(44rem 26rem at 88% 4%, color-mix(in oklch, var(--chart-2) 12%, transparent), transparent 62%);
+  }
+
+  /* Accent bloom used on hover states and primary actions. */
+  .glow-accent {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--primary) 40%, transparent),
+      0 10px 40px -12px color-mix(in oklch, var(--primary) 55%, transparent);
+  }
+  .dark .glow-accent {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--primary) 45%, transparent),
+      0 12px 44px -10px color-mix(in oklch, var(--primary) 60%, transparent);
+  }
+  .text-glow {
+    text-shadow: 0 0 24px color-mix(in oklch, var(--primary) 45%, transparent);
+  }
+
+  /* Eyebrow label above section headings. */
+  .kicker {
+    @apply inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary;
+  }
+
+  /* Numeric readouts: the HUD-ish monospace treatment for scores and timers. */
+  .hud-num {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
 }

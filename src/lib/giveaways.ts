@@ -147,6 +147,20 @@ export function formatCountdown(endsAt: number | null, now = Date.now()): string
   return `${minutes}m left`;
 }
 
+/**
+ * Rough 0-100 measure of how much runway an offer has, for the card meter.
+ *
+ * Deliberately not a true percentage of the offer window: a full-length deal
+ * can run for months, so anything under ~21 days left reads as "running out"
+ * and the bar fills down from there. It communicates pressure, not precision.
+ */
+export function remainingFraction(endsAt: number, now = Date.now()): number {
+  const remaining = endsAt - now;
+  if (remaining <= 0) return 0;
+  const METER_WINDOW_MS = 21 * 24 * 3_600_000;
+  return Math.max(4, Math.min(100, (remaining / METER_WINDOW_MS) * 100));
+}
+
 export type Urgency = "none" | "normal" | "warning" | "critical";
 
 /**
