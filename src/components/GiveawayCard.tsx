@@ -14,7 +14,7 @@ import {
   URGENCY_TEXT,
   urgencyLevel,
 } from "@/lib/giveaways";
-import { Bookmark, Check, ExternalLink, Flame, ShieldCheck, Timer, Users } from "lucide-react";
+import { Bookmark, Check, ExternalLink, Flame, ShieldCheck, Users } from "lucide-react";
 
 /**
  * The offer tile used on both the landing page and the app grid. `onSelect`
@@ -86,7 +86,7 @@ export function GiveawayCard({
           : undefined
       }
       className={cn(
-        "surface-card group relative flex flex-col overflow-hidden",
+        "surface-card group relative flex h-full flex-col overflow-hidden",
         "transition-[transform,border-color,box-shadow] duration-300",
         // Lift on hover only where a fine pointer exists: on touch it would
         // stick or fire on tap, which reads as a rendering glitch.
@@ -170,32 +170,47 @@ export function GiveawayCard({
           </p>
         </div>
 
-        {/* Time-remaining meter: a visual read on how much runway the offer has. */}
-        {giveaway.endsAt !== null && (
-          <div className="flex items-center gap-2">
-            <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-              <div
+        {/* Time-remaining meter: a visual read on how much runway the offer has.
+            Rendered for every card, deadline or not — omitting it for undated
+            offers (the majority of the board) made those cards a row shorter
+            than their neighbours. The dashed empty track reads as "no meter",
+            where a full muted bar would read as "plenty of time". */}
+        <div className="flex items-center gap-2">
+          {giveaway.endsAt !== null ? (
+            <>
+              <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-[width] duration-500",
+                    urgency === "critical" && "bg-destructive",
+                    urgency === "warning" && "bg-amber-500",
+                    urgency === "normal" && "bg-primary",
+                  )}
+                  style={{ width: `${remainingFraction(giveaway.endsAt, now)}%` }}
+                />
+              </div>
+              <span
                 className={cn(
-                  "h-full rounded-full transition-[width] duration-500",
-                  urgency === "critical" && "bg-destructive",
-                  urgency === "warning" && "bg-amber-500",
-                  urgency === "normal" && "bg-primary",
+                  "hud-num shrink-0 text-[11px] font-semibold",
+                  URGENCY_TEXT[urgency],
                 )}
-                style={{ width: `${remainingFraction(giveaway.endsAt, now)}%` }}
-              />
-            </div>
-            <span
-              className={cn(
-                "hud-num shrink-0 text-[11px] font-semibold",
-                URGENCY_TEXT[urgency],
-              )}
-            >
-              {formatCountdown(giveaway.endsAt, now).replace(" left", "")}
-            </span>
-          </div>
-        )}
+              >
+                {formatCountdown(giveaway.endsAt, now).replace(" left", "")}
+              </span>
+            </>
+          ) : (
+            <>
+              <div className="h-1 flex-1 rounded-full border border-dashed border-border" />
+              <span className="hud-num shrink-0 text-[11px] font-semibold text-muted-foreground">
+                No deadline
+              </span>
+            </>
+          )}
+        </div>
 
-        {/* Meta on its own line so the action row below always has room. */}
+        {/* Meta on its own line so the action row below always has room. The
+            deadline moved up to the meter row, so this line carries only
+            facts about the offer itself. */}
         <div className="mt-auto flex items-center gap-3 border-t border-border/60 pt-3 text-[11px] tabular-nums text-muted-foreground">
           {giveaway.drmFree && (
             <span className="inline-flex shrink-0 items-center gap-1 font-medium text-primary">
@@ -209,12 +224,6 @@ export function GiveawayCard({
               <Users className="size-3.5 shrink-0" />
               <span className="hud-num">{compactNumber(giveaway.users)}</span>
               <span className="hidden xl:inline"> users</span>
-            </span>
-          )}
-          {giveaway.endsAt === null && (
-            <span className="inline-flex items-center gap-1">
-              <Timer className="size-3.5 shrink-0" />
-              No deadline
             </span>
           )}
         </div>
@@ -263,15 +272,33 @@ export function GiveawayCard({
   );
 }
 
-/** Compact placeholder used while the feed is loading. */
+/**
+ * Placeholder used while the feed is loading.
+ *
+ * Mirrors the real card's block structure — two title lines, one platform
+ * line, the meter, the meta rule and the action row — so the grid does not
+ * jump in height when real cards replace the skeletons.
+ */
 export function GiveawayCardSkeleton() {
   return (
-    <div className="surface-card overflow-hidden">
-      <div className="aspect-[16/9] w-full animate-pulse bg-muted" />
-      <div className="space-y-3 p-4">
-        <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
-        <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
-        <div className="h-11 animate-pulse rounded-lg bg-muted" />
+    <div className="surface-card flex h-full flex-col overflow-hidden">
+      <div className="aspect-[16/9] w-full shrink-0 animate-pulse bg-muted" />
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="space-y-2">
+          <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+          <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+          <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="h-1 flex-1 animate-pulse rounded-full bg-muted" />
+          <div className="h-3 w-10 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="mt-auto flex items-center gap-2 border-t border-border/60 pt-3">
+          <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="h-11 flex-1 animate-pulse rounded-lg bg-muted" />
+        </div>
       </div>
     </div>
   );
