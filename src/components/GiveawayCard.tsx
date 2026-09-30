@@ -157,7 +157,12 @@ export function GiveawayCard({
             {giveaway.name}
           </h3>
           <p className="line-clamp-1 text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">
-            {giveaway.platforms.filter((p) => p !== "PC").join(" · ") || "PC"}
+            {giveaway.platforms.length > 0
+              ? giveaway.platforms.slice(0, 3).join(" · ") +
+                (giveaway.platforms.length > 3
+                  ? ` · +${giveaway.platforms.length - 3}`
+                  : "")
+              : "Multi-platform"}
           </p>
         </div>
 

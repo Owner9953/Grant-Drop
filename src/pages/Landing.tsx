@@ -231,14 +231,15 @@ export default function Landing() {
               Live feed · refreshed continuously
             </Badge>
             <h1 className="text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.035em] sm:text-6xl">
-              Every free PC game,
+              Every free game,
               <br />
-              <span className="text-primary text-glow">on one clean board.</span>
+              <span className="text-primary text-glow">every platform.</span>
             </h1>
             <p className="text-balance mx-auto mt-6 max-w-xl text-[15px] leading-7 text-muted-foreground">
-              Grantdrop pulls active giveaways from every major storefront into a
-              single feed. New drops land first, or sort by dollar value — then
-              save the ones you want before the timer runs out.
+              Grantdrop pulls active giveaways from every major storefront — PC,
+              console and mobile — into a single feed. New drops land first, or
+              sort by dollar value, then save what you want before the timer runs
+              out.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button asChild size="lg" className="h-11 w-full px-6 sm:w-auto">
@@ -573,8 +574,8 @@ export default function Landing() {
               Your next free game is sitting on the board right now
             </h2>
             <p className="text-balance mx-auto mt-4 max-w-lg text-[15px] leading-7 text-background/70">
-              Create an account and start building a library that would otherwise
-              cost hundreds of dollars.
+              Create an account and start building a library across PC, console
+              and mobile that would otherwise cost hundreds of dollars.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button

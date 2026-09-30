@@ -1,7 +1,7 @@
 {
-  "name": "Grantdrop — Free PC Game Giveaways",
+  "name": "Grantdrop — Free Game Giveaways",
   "short_name": "Grantdrop",
-  "description": "Every free PC game giveaway on one board. Filter by platform, save offers to your library, and claim before the timer runs out.",
+  "description": "Every free game giveaway on one board, across PC, console and mobile. Filter by platform, save offers to your library, and claim before the timer runs out.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
